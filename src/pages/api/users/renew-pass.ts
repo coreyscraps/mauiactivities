@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, unauthorizedResponse, calculatePassExpiryDate } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createPassRenewalIntent } from '@/lib/stripe';
@@ -7,7 +7,7 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
     return handlePost(req);
   } else {
@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest) {
   }
 }
 
-async function handlePost(req: NextRequest) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {

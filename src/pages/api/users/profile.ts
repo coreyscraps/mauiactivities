@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, unauthorizedResponse, getDaysUntilExpiry, isPassExpired } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,7 +6,7 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     return handleGet(req);
   } else if (req.method === 'PUT') {
@@ -19,7 +19,7 @@ export default async function handler(req: NextRequest) {
   }
 }
 
-async function handleGet(req: NextRequest) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
@@ -68,7 +68,7 @@ async function handleGet(req: NextRequest) {
   }
 }
 
-async function handlePut(req: NextRequest) {
+async function handlePut(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {

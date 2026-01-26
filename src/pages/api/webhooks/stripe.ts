@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { renewUserPass } from '../users/renew-pass';
@@ -8,7 +8,7 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return NextResponse.json(
       { error: 'Method not allowed' },
