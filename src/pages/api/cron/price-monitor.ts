@@ -36,7 +36,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     console.log(`[CRON] Price monitor completed: ${runId}`, result);
 
     return res.status(200).json({
-      success: result.success,
       runId,
       timestamp: new Date().toISOString(),
       ...result,

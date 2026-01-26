@@ -13,7 +13,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
   try {
     const payload = await verifyAuth(req);
-    if (!payload || !requireVendor(payload)) {
+    if (!payload) {
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
+    }
+
+    if (!requireVendor(payload)) {
       const { status, error } = unauthorizedResponse();
       return res.status(status).json({ error });
     }
@@ -71,24 +76,21 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ).toFixed(2)
         : '0';
 
-    return res.json(
-      {
-        analytics: {
-          vendorId,
-          businessName: vendor.business_name,
-          totalActivities: activities?.length || 0,
-          totalClicks,
-          totalConversions,
-          conversionRate: parseFloat(conversionRate as string),
-          totalEarnings: parseFloat(totalEarnings.toFixed(2)),
-          avgActivityRating: parseFloat(avgActivityRating as string),
-          plan: vendor.plan,
-          monthlyFee: vendor.monthly_fee,
-          verified: vendor.verified,
-        },
+    return res.status(200).json({
+      analytics: {
+        vendorId,
+        businessName: vendor.business_name,
+        totalActivities: activities?.length || 0,
+        totalClicks,
+        totalConversions,
+        conversionRate: parseFloat(conversionRate as string),
+        totalEarnings: parseFloat(totalEarnings.toFixed(2)),
+        avgActivityRating: parseFloat(avgActivityRating as string),
+        plan: vendor.plan,
+        monthlyFee: vendor.monthly_fee,
+        verified: vendor.verified,
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error fetching analytics:', error);
     return res.status(500).json({ error: 'Failed to fetch analytics' });

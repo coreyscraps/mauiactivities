@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, unauthorizedResponse, requireVendor } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,26 +6,26 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    return handleGet(req);
+    return handleGet(req, res);
   } else if (req.method === 'POST') {
-    return handlePost(req);
+    return handlePost(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
-async function handleGet(req: NextRequest) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
-    const { searchParams } = new URL(req.url || '/');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt((req.query.page as string) || '1');
+    const limit = parseInt((req.query.limit as string) || '20');
 
     let query = supabaseAdmin.from('bookings').select('*');
 
@@ -53,27 +53,24 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return res.json(
-      {
-        bookings: data || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit),
-        },
+    return res.status(200).json({
+      bookings: data || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        pages: Math.ceil((count || 0) / limit),
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error fetching bookings:', error);
     return res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 }
 
-async function handlePost(req: NextRequest) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const {
       userId,
       activityId,
@@ -119,9 +116,9 @@ async function handlePost(req: NextRequest) {
     }
 
     return res.status(201).json({
-        message: 'Booking tracked successfully',
-        booking,
-      });
+      message: 'Booking tracked successfully',
+      booking,
+    });
   } catch (error) {
     console.error('Error in POST /api/bookings:', error);
     return res.status(500).json({ error: 'Internal server error' });

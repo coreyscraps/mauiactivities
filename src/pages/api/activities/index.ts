@@ -16,7 +16,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function handleGet(req: NextRequest) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const { searchParams } = new URL(req.url || '/');
     const page = parseInt(searchParams.get('page') || '1');
@@ -47,30 +47,28 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return res.json(
-      {
-        activities: data || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit),
-        },
+    return res.status(200).json({
+      activities: data || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        pages: Math.ceil((count || 0) / limit),
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error fetching activities:', error);
     return res.status(500).json({ error: 'Failed to fetch activities' });
   }
 }
 
-async function handlePost(req: NextRequest) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     // Verify auth
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
     // Check if vendor
@@ -78,7 +76,7 @@ async function handlePost(req: NextRequest) {
       return res.status(403).json({ error: 'Only vendors can create activities' });
     }
 
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const {
       name,
       type,

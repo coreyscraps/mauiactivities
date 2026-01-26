@@ -15,10 +15,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const {
       businessName,
       contactPerson,
@@ -96,19 +97,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error sending onboarding email:', emailError);
     }
 
-    return res.json(
-      {
-        message: 'Vendor account created successfully',
-        vendor: {
-          id: vendor.id,
-          businessName: vendor.business_name,
-          email: vendor.email,
-          plan: vendor.plan,
-          monthlyFee: vendor.monthly_fee,
-        },
+    return res.status(201).json({
+      message: 'Vendor account created successfully',
+      vendor: {
+        id: vendor.id,
+        businessName: vendor.business_name,
+        email: vendor.email,
+        plan: vendor.plan,
+        monthlyFee: vendor.monthly_fee,
       },
-      { status: 201 }
-    );
+    });
   } catch (error) {
     console.error('Error in vendor register:', error);
     return res.status(500).json({ error: 'Internal server error' });

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,22 +6,21 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    return handleGet(req);
+    return handleGet(req, res);
   } else if (req.method === 'POST') {
-    return handlePost(req);
+    return handlePost(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
-async function handleGet(req: NextRequest) {
+async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { searchParams } = new URL(req.url || '/');
-    const activityId = searchParams.get('activityId');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '10');
+    const activityId = req.query.activityId as string;
+    const page = parseInt((req.query.page as string) || '1');
+    const limit = parseInt((req.query.limit as string) || '10');
 
     if (!activityId) {
       return res.status(400).json({ error: 'Activity ID is required' });
@@ -38,32 +37,29 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return res.json(
-      {
-        reviews: data || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit),
-        },
+    return res.status(200).json({
+      reviews: data || [],
+      pagination: {
+        page,
+        limit,
+        total: count || 0,
+        pages: Math.ceil((count || 0) / limit),
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error fetching reviews:', error);
     return res.status(500).json({ error: 'Failed to fetch reviews' });
   }
 }
 
-async function handlePost(req: NextRequest) {
+async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { activityId, rating, title, text } = body;
 
     // Validate input
@@ -109,9 +105,9 @@ async function handlePost(req: NextRequest) {
     await updateActivityRating(activityId);
 
     return res.status(201).json({
-        message: 'Review posted successfully',
-        review,
-      });
+      message: 'Review posted successfully',
+      review,
+    });
   } catch (error) {
     console.error('Error in POST /api/reviews:', error);
     return res.status(500).json({ error: 'Internal server error' });

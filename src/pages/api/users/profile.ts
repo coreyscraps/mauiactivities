@@ -8,9 +8,9 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    return handleGet(req);
+    return handleGet(req, res);
   } else if (req.method === 'PUT') {
-    return handlePut(req);
+    return handlePut(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -20,7 +20,8 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
     const { data: user, error } = await supabaseAdmin
@@ -36,23 +37,20 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     const passExpired = isPassExpired(user.pass_expires_at);
     const daysUntilExpiry = getDaysUntilExpiry(user.pass_expires_at);
 
-    return res.json(
-      {
-        user: {
-          id: user.id,
-          email: user.email,
-          subscriptionStatus: user.subscription_status,
-          passExpiresAt: user.pass_expires_at,
-          isPassExpired: passExpired,
-          daysUntilExpiry: passExpired ? 0 : daysUntilExpiry,
-          isVendor: user.is_vendor,
-          isAdmin: user.is_admin,
-          createdAt: user.created_at,
-          lastLogin: user.last_login,
-        },
+    return res.status(200).json({
+      user: {
+        id: user.id,
+        email: user.email,
+        subscriptionStatus: user.subscription_status,
+        passExpiresAt: user.pass_expires_at,
+        isPassExpired: passExpired,
+        daysUntilExpiry: passExpired ? 0 : daysUntilExpiry,
+        isVendor: user.is_vendor,
+        isAdmin: user.is_admin,
+        createdAt: user.created_at,
+        lastLogin: user.last_login,
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error fetching profile:', error);
     return res.status(500).json({ error: 'Failed to fetch profile' });
@@ -63,10 +61,11 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { email, subscriptionStatus } = body;
 
     const updateData: any = {};
@@ -85,19 +84,16 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
       return res.status(500).json({ error: 'Failed to update user' });
     }
 
-    return res.json(
-      {
-        message: 'Profile updated successfully',
-        user: {
-          id: user.id,
-          email: user.email,
-          subscriptionStatus: user.subscription_status,
-          passExpiresAt: user.pass_expires_at,
-          isVendor: user.is_vendor,
-        },
+    return res.status(200).json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user.id,
+        email: user.email,
+        subscriptionStatus: user.subscription_status,
+        passExpiresAt: user.pass_expires_at,
+        isVendor: user.is_vendor,
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error updating profile:', error);
     return res.status(500).json({ error: 'Failed to update profile' });

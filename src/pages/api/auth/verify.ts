@@ -32,21 +32,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const passExpired = isPassExpired(user.pass_expires_at);
     const daysUntilExpiry = getDaysUntilExpiry(user.pass_expires_at);
 
-    return res.json(
-      {
-        valid: true,
-        user: {
-          id: user.id,
-          email: user.email,
-          subscriptionStatus: user.subscription_status,
-          passExpiresAt: user.pass_expires_at,
-          isVendor: user.is_vendor,
-          isPassExpired: passExpired,
-          daysUntilExpiry: passExpired ? 0 : daysUntilExpiry,
-        },
+    return res.status(200).json({
+      valid: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        subscriptionStatus: user.subscription_status,
+        passExpiresAt: user.pass_expires_at,
+        isVendor: user.is_vendor,
+        isPassExpired: passExpired,
+        daysUntilExpiry: passExpired ? 0 : daysUntilExpiry,
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error in verify:', error);
     return res.status(500).json({ error: 'Internal server error' });

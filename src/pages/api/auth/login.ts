@@ -12,7 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const body = await req.json();
+    const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const { email, password } = body;
 
     // Validate input
@@ -55,20 +55,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isVendor: user.is_vendor,
     });
 
-    return res.json(
-      {
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          subscriptionStatus: user.subscription_status,
-          passExpiresAt: user.pass_expires_at,
-          isVendor: user.is_vendor,
-        },
-        token,
+    return res.status(200).json({
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        subscriptionStatus: user.subscription_status,
+        passExpiresAt: user.pass_expires_at,
+        isVendor: user.is_vendor,
       },
-      { status: 200 }
-    );
+      token,
+    });
   } catch (error) {
     console.error('Error in login:', error);
     return res.status(500).json({ error: 'Internal server error' });

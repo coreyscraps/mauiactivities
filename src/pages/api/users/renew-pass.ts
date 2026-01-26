@@ -9,7 +9,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    return handlePost(req);
+    return handlePost(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -19,7 +19,8 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
     // Get user
@@ -45,18 +46,15 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       stripe_payment_intent_id: paymentIntent.id,
     });
 
-    return res.json(
-      {
-        message: 'Payment intent created',
-        paymentIntent: {
-          id: paymentIntent.id,
-          clientSecret: paymentIntent.client_secret,
-          amount: paymentIntent.amount,
-          currency: paymentIntent.currency,
-        },
+    return res.status(200).json({
+      message: 'Payment intent created',
+      paymentIntent: {
+        id: paymentIntent.id,
+        clientSecret: paymentIntent.client_secret,
+        amount: paymentIntent.amount,
+        currency: paymentIntent.currency,
       },
-      { status: 200 }
-    );
+    });
   } catch (error) {
     console.error('Error in renew-pass:', error);
     return res.status(500).json({ error: 'Failed to create payment intent' });

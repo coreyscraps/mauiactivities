@@ -14,8 +14,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const body = await req.text();
-    const signature = req.headers.get('stripe-signature');
+    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    const signature = req.headers['stripe-signature'] as string;
 
     if (!signature) {
       return res.status(400).json({ error: 'Missing stripe signature' });
