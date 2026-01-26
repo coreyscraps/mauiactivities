@@ -11,10 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
@@ -33,10 +30,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // Create Stripe payment intent
@@ -51,7 +45,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       stripe_payment_intent_id: paymentIntent.id,
     });
 
-    return NextResponse.json(
+    return res.json(
       {
         message: 'Payment intent created',
         paymentIntent: {
@@ -65,10 +59,7 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     );
   } catch (error) {
     console.error('Error in renew-pass:', error);
-    return NextResponse.json(
-      { error: 'Failed to create payment intent' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to create payment intent' });
   }
 }
 

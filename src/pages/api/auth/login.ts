@@ -8,10 +8,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -20,10 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     // Get user
@@ -34,27 +28,18 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error || !user) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Check if user is deleted
     if (user.deleted_at) {
-      return NextResponse.json(
-        { error: 'User account has been deleted' },
-        { status: 401 }
-      );
+      return res.status(401).json({ error: 'User account has been deleted' });
     }
 
     // Compare password
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
-      return NextResponse.json(
-        { error: 'Invalid email or password' },
-        { status: 401 }
-      );
+      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     // Update last login
@@ -70,7 +55,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isVendor: user.is_vendor,
     });
 
-    return NextResponse.json(
+    return res.json(
       {
         message: 'Login successful',
         user: {
@@ -86,9 +71,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in login:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

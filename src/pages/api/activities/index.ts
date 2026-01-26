@@ -12,10 +12,7 @@ export default async function handler(req: NextRequest) {
   } else if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
@@ -50,7 +47,7 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         activities: data || [],
         pagination: {
@@ -64,10 +61,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching activities:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch activities' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to fetch activities' });
   }
 }
 
@@ -81,10 +75,7 @@ async function handlePost(req: NextRequest) {
 
     // Check if vendor
     if (!requireVendor(payload)) {
-      return NextResponse.json(
-        { error: 'Only vendors can create activities' },
-        { status: 403 }
-      );
+      return res.status(403).json({ error: 'Only vendors can create activities' });
     }
 
     const body = await req.json();
@@ -111,10 +102,7 @@ async function handlePost(req: NextRequest) {
       .single();
 
     if (vendorError || !vendor) {
-      return NextResponse.json(
-        { error: 'Vendor profile not found' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'Vendor profile not found' });
     }
 
     // Create activity
@@ -141,24 +129,15 @@ async function handlePost(req: NextRequest) {
 
     if (error) {
       console.error('Error creating activity:', error);
-      return NextResponse.json(
-        { error: 'Failed to create activity' },
-        { status: 500 }
-      );
+      return res.status(500).json({ error: 'Failed to create activity' });
     }
 
-    return NextResponse.json(
-      {
+    return res.status(201).json({
         message: 'Activity created successfully',
         activity,
-      },
-      { status: 201 }
-    );
+      });
   } catch (error) {
     console.error('Error in POST /api/activities:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

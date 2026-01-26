@@ -9,10 +9,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -21,17 +18,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
-        { error: 'Email and password are required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Email and password are required' });
     }
 
     if (password.length < 8) {
-      return NextResponse.json(
-        { error: 'Password must be at least 8 characters' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Password must be at least 8 characters' });
     }
 
     // Check if user already exists
@@ -42,10 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: 'User already exists' },
-        { status: 409 }
-      );
+      return res.status(409).json({ error: 'User already exists' });
     }
 
     // Hash password
@@ -69,10 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Error creating user:', error);
-      return NextResponse.json(
-        { error: 'Failed to create user' },
-        { status: 500 }
-      );
+      return res.status(500).json({ error: 'Failed to create user' });
     }
 
     // Generate JWT token
@@ -90,7 +75,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Continue even if email fails
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         message: 'User created successfully',
         user: {
@@ -105,9 +90,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in signup:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

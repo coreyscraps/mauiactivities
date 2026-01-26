@@ -9,10 +9,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -32,10 +29,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!businessName) {
-      return NextResponse.json(
-        { error: 'Business name is required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Business name is required' });
     }
 
     // Get user
@@ -46,10 +40,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (userError || !user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'User not found' });
     }
 
     // Check if already a vendor
@@ -60,10 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (existingVendor) {
-      return NextResponse.json(
-        { error: 'You are already registered as a vendor' },
-        { status: 409 }
-      );
+      return res.status(409).json({ error: 'You are already registered as a vendor' });
     }
 
     // Determine monthly fee based on plan
@@ -91,10 +79,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Error creating vendor:', error);
-      return NextResponse.json(
-        { error: 'Failed to create vendor profile' },
-        { status: 500 }
-      );
+      return res.status(500).json({ error: 'Failed to create vendor profile' });
     }
 
     // Update user to be a vendor
@@ -111,7 +96,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error sending onboarding email:', emailError);
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         message: 'Vendor account created successfully',
         vendor: {
@@ -126,9 +111,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in vendor register:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

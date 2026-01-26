@@ -7,10 +7,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -18,10 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = pathname.split('/')[4]; // Extract ID from /api/activities/[id]/pricing
 
     if (!id) {
-      return NextResponse.json(
-        { error: 'Activity ID is required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Activity ID is required' });
     }
 
     // Get activity
@@ -33,10 +27,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error || !activity) {
-      return NextResponse.json(
-        { error: 'Activity not found' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'Activity not found' });
     }
 
     const prices = {
@@ -58,20 +49,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    return NextResponse.json(
-      {
+    return res.status(200).json({
         activityId: activity.id,
         activityName: activity.name,
         prices: pricesWithDiscount,
         insiderDiscount: activity.insider_discount,
-      },
-      { status: 200 }
-    );
+      });
   } catch (error) {
     console.error('Error fetching pricing:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch pricing' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to fetch pricing' });
   }
 }

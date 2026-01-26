@@ -12,10 +12,7 @@ export default async function handler(req: NextRequest) {
   } else if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
@@ -56,7 +53,7 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         bookings: data || [],
         pagination: {
@@ -70,10 +67,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch bookings' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to fetch bookings' });
   }
 }
 
@@ -93,10 +87,7 @@ async function handlePost(req: NextRequest) {
 
     // Validate input
     if (!activityId || !vendorId) {
-      return NextResponse.json(
-        { error: 'Activity ID and Vendor ID are required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Activity ID and Vendor ID are required' });
     }
 
     // Calculate commission (default 15%)
@@ -124,24 +115,15 @@ async function handlePost(req: NextRequest) {
 
     if (error) {
       console.error('Error creating booking:', error);
-      return NextResponse.json(
-        { error: 'Failed to create booking' },
-        { status: 500 }
-      );
+      return res.status(500).json({ error: 'Failed to create booking' });
     }
 
-    return NextResponse.json(
-      {
+    return res.status(201).json({
         message: 'Booking tracked successfully',
         booking,
-      },
-      { status: 201 }
-    );
+      });
   } catch (error) {
     console.error('Error in POST /api/bookings:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }

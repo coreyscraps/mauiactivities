@@ -12,10 +12,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   } else if (req.method === 'PUT') {
     return handlePut(req);
   } else {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
 
@@ -33,16 +30,13 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
       .single();
 
     if (error || !user) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'User not found' });
     }
 
     const passExpired = isPassExpired(user.pass_expires_at);
     const daysUntilExpiry = getDaysUntilExpiry(user.pass_expires_at);
 
-    return NextResponse.json(
+    return res.json(
       {
         user: {
           id: user.id,
@@ -61,10 +55,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
     );
   } catch (error) {
     console.error('Error fetching profile:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch profile' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to fetch profile' });
   }
 }
 
@@ -91,13 +82,10 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
 
     if (error) {
       console.error('Error updating user:', error);
-      return NextResponse.json(
-        { error: 'Failed to update user' },
-        { status: 500 }
-      );
+      return res.status(500).json({ error: 'Failed to update user' });
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         message: 'Profile updated successfully',
         user: {
@@ -112,9 +100,6 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
     );
   } catch (error) {
     console.error('Error updating profile:', error);
-    return NextResponse.json(
-      { error: 'Failed to update profile' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to update profile' });
   }
 }

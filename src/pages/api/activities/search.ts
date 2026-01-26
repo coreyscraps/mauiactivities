@@ -7,10 +7,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -60,7 +57,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      return NextResponse.json(
+      return res.json(
         {
           activities: activities.slice((page - 1) * limit, page * limit),
           pagination: {
@@ -83,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw error;
     }
 
-    return NextResponse.json(
+    return res.json(
       {
         activities: data || [],
         pagination: {
@@ -97,9 +94,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error searching activities:', error);
-    return NextResponse.json(
-      { error: 'Failed to search activities' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to search activities' });
   }
 }

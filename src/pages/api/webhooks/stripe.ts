@@ -10,10 +10,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -21,20 +18,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-      return NextResponse.json(
-        { error: 'Missing stripe signature' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Missing stripe signature' });
     }
 
     // Verify webhook signature
     const event = verifyWebhookSignature(body, signature);
 
     if (!event) {
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Invalid signature' });
     }
 
     // Handle different event types
@@ -52,16 +43,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return NextResponse.json(
-      { received: true },
-      { status: 200 }
-    );
+    return res.status(200).json({ received: true });
   } catch (error) {
     console.error('Webhook error:', error);
-    return NextResponse.json(
-      { error: 'Webhook handler error' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Webhook handler error' });
   }
 }
 

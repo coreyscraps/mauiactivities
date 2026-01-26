@@ -8,10 +8,7 @@ export const config = {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
@@ -24,10 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const vendorId = pathname.split('/')[4]; // Extract vendor ID
 
     if (!vendorId) {
-      return NextResponse.json(
-        { error: 'Vendor ID is required' },
-        { status: 400 }
-      );
+      return res.status(400).json({ error: 'Vendor ID is required' });
     }
 
     // Verify vendor ownership
@@ -39,10 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (vendorError || !vendor) {
-      return NextResponse.json(
-        { error: 'Vendor not found or unauthorized' },
-        { status: 404 }
-      );
+      return res.status(404).json({ error: 'Vendor not found or unauthorized' });
     }
 
     // Get analytics data
@@ -80,7 +71,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ).toFixed(2)
         : '0';
 
-    return NextResponse.json(
+    return res.json(
       {
         analytics: {
           vendorId,
@@ -100,9 +91,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error fetching analytics:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch analytics' },
-      { status: 500 }
-    );
+    return res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 }
