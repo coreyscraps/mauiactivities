@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, requireVendor, unauthorizedResponse } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,11 +6,11 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
-    return handleGet(req);
+    return handleGet(req, res);
   } else if (req.method === 'POST') {
-    return handlePost(req);
+    return handlePost(req, res);
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
