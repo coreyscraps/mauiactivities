@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse, requireVendor } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,13 +6,13 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method === 'GET') {
     return handleGet(req);
   } else if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -56,7 +56,7 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         bookings: data || [],
         pagination: {
@@ -70,7 +70,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching bookings:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to fetch bookings' },
       { status: 500 }
     );
@@ -93,7 +93,7 @@ async function handlePost(req: NextRequest) {
 
     // Validate input
     if (!activityId || !vendorId) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Activity ID and Vendor ID are required' },
         { status: 400 }
       );
@@ -124,13 +124,13 @@ async function handlePost(req: NextRequest) {
 
     if (error) {
       console.error('Error creating booking:', error);
-      return res.status(
+      return NextResponse.json(
         { error: 'Failed to create booking' },
         { status: 500 }
       );
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Booking tracked successfully',
         booking,
@@ -139,7 +139,7 @@ async function handlePost(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in POST /api/bookings:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );

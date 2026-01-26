@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { hashPassword, generateToken, calculatePassExpiryDate } from '@/lib/auth';
 import { sendWelcomeEmail } from '@/lib/email';
@@ -7,9 +7,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'POST') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -21,14 +21,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!email || !password) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Password must be at least 8 characters' },
         { status: 400 }
       );
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (existingUser) {
-      return res.status(
+      return NextResponse.json(
         { error: 'User already exists' },
         { status: 409 }
       );
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Error creating user:', error);
-      return res.status(
+      return NextResponse.json(
         { error: 'Failed to create user' },
         { status: 500 }
       );
@@ -90,7 +90,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Continue even if email fails
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'User created successfully',
         user: {
@@ -105,7 +105,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in signup:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );

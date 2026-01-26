@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { sendVendorOnboardingEmail } from '@/lib/email';
@@ -7,9 +7,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'POST') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -32,7 +32,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!businessName) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Business name is required' },
         { status: 400 }
       );
@@ -46,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (userError || !user) {
-      return res.status(
+      return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (existingVendor) {
-      return res.status(
+      return NextResponse.json(
         { error: 'You are already registered as a vendor' },
         { status: 409 }
       );
@@ -91,7 +91,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (error) {
       console.error('Error creating vendor:', error);
-      return res.status(
+      return NextResponse.json(
         { error: 'Failed to create vendor profile' },
         { status: 500 }
       );
@@ -111,7 +111,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       console.error('Error sending onboarding email:', emailError);
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Vendor account created successfully',
         vendor: {
@@ -126,7 +126,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in vendor register:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );

@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse, calculatePassExpiryDate } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 import { createPassRenewalIntent } from '@/lib/stripe';
@@ -7,11 +7,11 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -33,7 +33,7 @@ async function handlePost(req: NextRequest) {
       .single();
 
     if (userError || !user) {
-      return res.status(
+      return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
@@ -51,7 +51,7 @@ async function handlePost(req: NextRequest) {
       stripe_payment_intent_id: paymentIntent.id,
     });
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Payment intent created',
         paymentIntent: {
@@ -65,7 +65,7 @@ async function handlePost(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in renew-pass:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to create payment intent' },
       { status: 500 }
     );

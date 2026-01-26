@@ -1,13 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'GET') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -18,7 +18,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const id = pathname.split('/')[4]; // Extract ID from /api/activities/[id]/pricing
 
     if (!id) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Activity ID is required' },
         { status: 400 }
       );
@@ -33,7 +33,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error || !activity) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Activity not found' },
         { status: 404 }
       );
@@ -58,7 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
     });
 
-    return res.status(
+    return NextResponse.json(
       {
         activityId: activity.id,
         activityName: activity.name,
@@ -69,7 +69,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error fetching pricing:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to fetch pricing' },
       { status: 500 }
     );

@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyWebhookSignature } from '@/lib/stripe';
 import { supabaseAdmin } from '@/lib/supabase';
 import { renewUserPass } from '../users/renew-pass';
@@ -8,9 +8,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'POST') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const signature = req.headers.get('stripe-signature');
 
     if (!signature) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Missing stripe signature' },
         { status: 400 }
       );
@@ -31,7 +31,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const event = verifyWebhookSignature(body, signature);
 
     if (!event) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 400 }
       );
@@ -52,13 +52,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         console.log(`Unhandled event type: ${event.type}`);
     }
 
-    return res.status(
+    return NextResponse.json(
       { received: true },
       { status: 200 }
     );
   } catch (error) {
     console.error('Webhook error:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Webhook handler error' },
       { status: 500 }
     );

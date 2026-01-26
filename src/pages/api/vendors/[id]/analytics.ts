@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse, requireVendor } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,9 +6,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'GET') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -24,7 +24,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const vendorId = pathname.split('/')[4]; // Extract vendor ID
 
     if (!vendorId) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Vendor ID is required' },
         { status: 400 }
       );
@@ -39,7 +39,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (vendorError || !vendor) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Vendor not found or unauthorized' },
         { status: 404 }
       );
@@ -80,7 +80,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           ).toFixed(2)
         : '0';
 
-    return res.status(
+    return NextResponse.json(
       {
         analytics: {
           vendorId,
@@ -100,7 +100,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error fetching analytics:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to fetch analytics' },
       { status: 500 }
     );

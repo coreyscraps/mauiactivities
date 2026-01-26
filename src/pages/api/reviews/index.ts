@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,13 +6,13 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method === 'GET') {
     return handleGet(req);
   } else if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -27,7 +27,7 @@ async function handleGet(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!activityId) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Activity ID is required' },
         { status: 400 }
       );
@@ -44,7 +44,7 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         reviews: data || [],
         pagination: {
@@ -58,7 +58,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching reviews:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to fetch reviews' },
       { status: 500 }
     );
@@ -69,7 +69,7 @@ async function handlePost(req: NextRequest) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       );
@@ -80,14 +80,14 @@ async function handlePost(req: NextRequest) {
 
     // Validate input
     if (!activityId || !rating) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Activity ID and rating are required' },
         { status: 400 }
       );
     }
 
     if (rating < 1 || rating > 5) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Rating must be between 1 and 5' },
         { status: 400 }
       );
@@ -102,7 +102,7 @@ async function handlePost(req: NextRequest) {
       .single();
 
     if (existingReview) {
-      return res.status(
+      return NextResponse.json(
         { error: 'You have already reviewed this activity' },
         { status: 409 }
       );
@@ -123,7 +123,7 @@ async function handlePost(req: NextRequest) {
 
     if (error) {
       console.error('Error creating review:', error);
-      return res.status(
+      return NextResponse.json(
         { error: 'Failed to create review' },
         { status: 500 }
       );
@@ -132,7 +132,7 @@ async function handlePost(req: NextRequest) {
     // Update activity rating
     await updateActivityRating(activityId);
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Review posted successfully',
         review,
@@ -141,7 +141,7 @@ async function handlePost(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in POST /api/reviews:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );

@@ -1,13 +1,13 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 
 export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'GET') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -60,7 +60,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         });
       }
 
-      return res.status(
+      return NextResponse.json(
         {
           activities: activities.slice((page - 1) * limit, page * limit),
           pagination: {
@@ -83,7 +83,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       throw error;
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         activities: data || [],
         pagination: {
@@ -97,7 +97,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error searching activities:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to search activities' },
       { status: 500 }
     );

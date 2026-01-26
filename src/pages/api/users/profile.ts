@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth, unauthorizedResponse, getDaysUntilExpiry, isPassExpired } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,13 +6,13 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method === 'GET') {
     return handleGet(req);
   } else if (req.method === 'PUT') {
     return handlePut(req);
   } else {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -33,7 +33,7 @@ async function handleGet(req: NextRequest) {
       .single();
 
     if (error || !user) {
-      return res.status(
+      return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
@@ -42,7 +42,7 @@ async function handleGet(req: NextRequest) {
     const passExpired = isPassExpired(user.pass_expires_at);
     const daysUntilExpiry = getDaysUntilExpiry(user.pass_expires_at);
 
-    return res.status(
+    return NextResponse.json(
       {
         user: {
           id: user.id,
@@ -61,7 +61,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching profile:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to fetch profile' },
       { status: 500 }
     );
@@ -91,13 +91,13 @@ async function handlePut(req: NextRequest) {
 
     if (error) {
       console.error('Error updating user:', error);
-      return res.status(
+      return NextResponse.json(
         { error: 'Failed to update user' },
         { status: 500 }
       );
     }
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Profile updated successfully',
         user: {
@@ -112,7 +112,7 @@ async function handlePut(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error updating profile:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Failed to update profile' },
       { status: 500 }
     );

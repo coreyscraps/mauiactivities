@@ -1,4 +1,4 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase';
 import { comparePassword, generateToken } from '@/lib/auth';
 
@@ -6,9 +6,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(req: NextRequest) {
   if (req.method !== 'POST') {
-    return res.status(
+    return NextResponse.json(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -20,7 +20,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Validate input
     if (!email || !password) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
       );
@@ -34,7 +34,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       .single();
 
     if (error || !user) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
@@ -42,7 +42,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     // Check if user is deleted
     if (user.deleted_at) {
-      return res.status(
+      return NextResponse.json(
         { error: 'User account has been deleted' },
         { status: 401 }
       );
@@ -51,7 +51,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Compare password
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
-      return res.status(
+      return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       isVendor: user.is_vendor,
     });
 
-    return res.status(
+    return NextResponse.json(
       {
         message: 'Login successful',
         user: {
@@ -86,7 +86,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     );
   } catch (error) {
     console.error('Error in login:', error);
-    return res.status(
+    return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
