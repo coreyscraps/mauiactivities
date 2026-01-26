@@ -14,28 +14,18 @@ export default async function handler(req: NextRequest) {
   }
 
   try {
-    // Check database connection
-    const { data, error } = await supabaseAdmin
-      .from('users')
-      .select('count', { count: 'exact', head: true });
-
-    const dbHealthy = !error;
-
     return NextResponse.json(
       {
         status: 'ok',
         timestamp: new Date().toISOString(),
         environment: process.env.NODE_ENV,
-        database: {
-          connected: dbHealthy,
-        },
         features: {
           stripe: !!process.env.STRIPE_SECRET_KEY,
-          sendgrid: !!process.env.SENDGRID_API_KEY,
+          resend: !!process.env.RESEND_API_KEY,
           supabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
         },
       },
-      { status: dbHealthy ? 200 : 503 }
+      { status: 200 }
     );
   } catch (error) {
     console.error('Health check error:', error);
