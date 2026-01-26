@@ -1,18 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 
-export const config = {
-  runtime: 'nodejs',
-};
-
-export default function handler(req: NextRequest) {
+export default function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'GET') {
-    return NextResponse.json(
-      { error: 'Method not allowed' },
-      { status: 405 }
-    );
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  return NextResponse.json({
+  res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'production',
