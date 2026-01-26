@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest) {
 
 async function handleGet(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(req.url || '/');
     const activityId = searchParams.get('activityId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');

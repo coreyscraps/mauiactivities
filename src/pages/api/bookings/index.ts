@@ -20,10 +20,10 @@ async function handleGet(req: NextRequest) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      return unauthorizedResponse();
+      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
     }
 
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(req.url || '/');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 

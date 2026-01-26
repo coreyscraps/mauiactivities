@@ -14,11 +14,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const payload = await verifyAuth(req);
     if (!payload || !requireVendor(payload)) {
-      return unauthorizedResponse();
+      const { status, error } = unauthorizedResponse();
+      return res.status(status).json({ error });
     }
 
-    const { pathname } = new URL(req.url);
-    const vendorId = pathname.split('/')[4]; // Extract vendor ID
+    const vendorId = req.query.id as string;
 
     if (!vendorId) {
       return res.status(400).json({ error: 'Vendor ID is required' });

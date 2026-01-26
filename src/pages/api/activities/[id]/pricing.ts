@@ -11,8 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { pathname } = new URL(req.url);
-    const id = pathname.split('/')[4]; // Extract ID from /api/activities/[id]/pricing
+    const id = req.query.id as string;
 
     if (!id) {
       return res.status(400).json({ error: 'Activity ID is required' });

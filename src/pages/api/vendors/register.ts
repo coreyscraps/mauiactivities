@@ -15,7 +15,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      return unauthorizedResponse();
+      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
     }
 
     const body = await req.json();

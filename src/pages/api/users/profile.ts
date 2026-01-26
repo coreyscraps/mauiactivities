@@ -20,7 +20,7 @@ async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      return unauthorizedResponse();
+      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
     }
 
     const { data: user, error } = await supabaseAdmin
@@ -63,7 +63,7 @@ async function handlePut(req: NextApiRequest, res: NextApiResponse) {
   try {
     const payload = await verifyAuth(req);
     if (!payload) {
-      return unauthorizedResponse();
+      { const { status, error } = unauthorizedResponse(); return res.status(status).json({ error }); }
     }
 
     const body = await req.json();

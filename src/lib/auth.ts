@@ -1,6 +1,6 @@
 import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest } from 'next';
 
 const JWT_SECRET: string = process.env.JWT_SECRET || 'default-secret-change-me';
 const JWT_EXPIRY: string = process.env.JWT_EXPIRY || '7d';
@@ -52,8 +52,8 @@ export function verifyToken(token: string): JWTPayload | null {
 /**
  * Extract token from Authorization header
  */
-export function extractToken(request: NextRequest): string | null {
-  const authHeader = request.headers.get('authorization');
+export function extractToken(request: NextApiRequest): string | null {
+  const authHeader = request.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
@@ -61,9 +61,9 @@ export function extractToken(request: NextRequest): string | null {
 }
 
 /**
- * Middleware to verify JWT token
+ * Verify JWT token from request
  */
-export async function verifyAuth(request: NextRequest): Promise<JWTPayload | null> {
+export async function verifyAuth(request: NextApiRequest): Promise<JWTPayload | null> {
   const token = extractToken(request);
   if (!token) {
     return null;
@@ -74,15 +74,15 @@ export async function verifyAuth(request: NextRequest): Promise<JWTPayload | nul
 /**
  * Create error response for unauthorized access
  */
-export function unauthorizedResponse(message: string = 'Unauthorized'): NextResponse {
-  return NextResponse.json({ error: message }, { status: 401 });
+export function unauthorizedResponse(message: string = 'Unauthorized'): { status: number; error: string } {
+  return { status: 401, error: message };
 }
 
 /**
  * Create error response for forbidden access
  */
-export function forbiddenResponse(message: string = 'Forbidden'): NextResponse {
-  return NextResponse.json({ error: message }, { status: 403 });
+export function forbiddenResponse(message: string = 'Forbidden'): { status: number; error: string } {
+  return { status: 403, error: message };
 }
 
 /**

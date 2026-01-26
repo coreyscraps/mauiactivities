@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = new URL(req.url || '/');
     const type = searchParams.get('type');
     const location = searchParams.get('location');
     const minPrice = searchParams.get('minPrice');
