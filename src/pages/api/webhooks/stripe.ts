@@ -78,7 +78,7 @@ async function handlePaymentIntentSucceeded(
       .from('payments')
       .update({
         status: 'succeeded',
-        stripe_charge_id: paymentIntent.charges.data[0]?.id,
+        stripe_charge_id: paymentIntent.latest_charge as string,
         updated_at: new Date().toISOString(),
       })
       .eq('stripe_payment_intent_id', paymentIntent.id);
@@ -94,7 +94,7 @@ async function handlePaymentIntentSucceeded(
       await supabaseAdmin
         .from('vendors')
         .update({
-          stripe_account_id: paymentIntent.charges.data[0]?.id || null,
+          stripe_account_id: (paymentIntent.latest_charge as string) || null,
           updated_at: new Date().toISOString(),
         })
         .eq('id', vendorId);

@@ -2,8 +2,8 @@ import bcryptjs from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { NextRequest, NextResponse } from 'next/server';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-change-me';
-const JWT_EXPIRY = process.env.JWT_EXPIRY || '7d';
+const JWT_SECRET: string = process.env.JWT_SECRET || 'default-secret-change-me';
+const JWT_EXPIRY: string = process.env.JWT_EXPIRY || '7d';
 
 export interface JWTPayload {
   userId: string;
@@ -35,7 +35,7 @@ export async function comparePassword(
  * Generate a JWT token
  */
 export function generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRY });
+  return jwt.sign(payload as any, JWT_SECRET as any, { expiresIn: JWT_EXPIRY } as any) as string;
 }
 
 /**

@@ -47,7 +47,7 @@ export default async function handler(req: NextRequest) {
     };
 
     // Add insider discount if applicable
-    const pricesWithDiscount = {};
+    const pricesWithDiscount: Record<string, any> = {};
     Object.entries(prices).forEach(([source, price]) => {
       if (price) {
         pricesWithDiscount[source] = {
