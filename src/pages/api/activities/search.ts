@@ -1,99 +1,116 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/supabase';
 
-export const config = {
-  runtime: 'nodejs',
-};
-
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const { searchParams } = new URL(req.url || '/');
-    const type = searchParams.get('type');
-    const location = searchParams.get('location');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const minRating = searchParams.get('minRating');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const {
+      q,
+      category,
+      location,
+      sortBy = 'popularity',
+      priceMin = 0,
+      priceMax = 10000,
+      minRating = 0,
+      page = '1',
+      limit = '20',
+    } = req.query;
 
+    const pageNum = parseInt(page as string) || 1;
+    const limitNum = parseInt(limit as string) || 20;
+    const offset = (pageNum - 1) * limitNum;
+
+    // Build query
     let query = supabaseAdmin
       .from('activities')
-      .select('*')
+      .select(
+        `
+        id,
+        name,
+        description,
+        base_price,
+        currency,
+        rating,
+        review_count,
+        view_count,
+        booking_count,
+        image_url,
+        booking_url,
+        duration_minutes,
+        category_id,
+        location_id,
+        vendor_id,
+        vendors!inner(id, name, rating, review_count, website),
+        categories(name),
+        locations(name, region)
+        `,
+        { count: 'exact' }
+      )
       .eq('status', 'published')
-      .order('rating', { ascending: false })
-      .order('created_at', { ascending: false });
+      .gte('base_price', priceMin)
+      .lte('base_price', priceMax)
+      .gte('rating', minRating);
 
-    // Apply filters
-    if (type) {
-      query = query.eq('type', type);
+    // Apply category filter
+    if (category) {
+      query = query.eq('category_id', category);
     }
 
+    // Apply location filter
     if (location) {
-      query = query.ilike('location', `%${location}%`);
+      query = query.eq('location_id', location);
     }
 
-    if (minRating) {
-      query = query.gte('rating', parseFloat(minRating));
-    }
-
-    // Price filtering with JSONB
-    // Note: This assumes prices are stored with a 'direct' key
-    if (minPrice || maxPrice) {
-      // This is a simplified approach - you may need to adjust based on your prices structure
-      let activities = [];
-      const { data, error } = await query;
-
-      if (!error && data) {
-        activities = data.filter((activity) => {
-          const directPrice = activity.prices?.direct;
-          if (!directPrice) return false;
-          if (minPrice && directPrice < parseFloat(minPrice)) return false;
-          if (maxPrice && directPrice > parseFloat(maxPrice)) return false;
-          return true;
-        });
-      }
-
-      return res.json(
-        {
-          activities: activities.slice((page - 1) * limit, page * limit),
-          pagination: {
-            page,
-            limit,
-            total: activities.length,
-            pages: Math.ceil(activities.length / limit),
-          },
-        },
-        { status: 200 }
+    // Apply search term
+    if (q) {
+      query = query.or(
+        `name.ilike.%${q}%,description.ilike.%${q}%`
       );
     }
 
-    const { data, error, count } = await query.range(
-      (page - 1) * limit,
-      page * limit - 1
-    );
-
-    if (error) {
-      throw error;
+    // Apply sorting
+    switch (sortBy) {
+      case 'price_asc':
+        query = query.order('base_price', { ascending: true });
+        break;
+      case 'price_desc':
+        query = query.order('base_price', { ascending: false });
+        break;
+      case 'rating':
+        query = query.order('rating', { ascending: false });
+        break;
+      case 'popularity':
+        query = query.order('view_count', { ascending: false });
+        break;
+      case 'newest':
+        query = query.order('created_at', { ascending: false });
+        break;
+      default:
+        query = query.order('view_count', { ascending: false });
     }
 
-    return res.json(
-      {
-        activities: data || [],
-        pagination: {
-          page,
-          limit,
-          total: count || 0,
-          pages: Math.ceil((count || 0) / limit),
-        },
-      },
-      { status: 200 }
-    );
+    // Pagination
+    const { data: activities, error, count } = await query.range(offset, offset + limitNum - 1);
+
+    if (error) {
+      return res.status(400).json({ error: error.message });
+    }
+
+    return res.status(200).json({
+      activities: activities || [],
+      totalCount: count || 0,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil((count || 0) / limitNum),
+    });
   } catch (error) {
-    console.error('Error searching activities:', error);
-    return res.status(500).json({ error: 'Failed to search activities' });
+    console.error('Search error:', error);
+    return res.status(500).json({ error: 'Search failed' });
   }
 }
