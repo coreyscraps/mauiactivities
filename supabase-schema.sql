@@ -60,6 +60,26 @@ CREATE TABLE IF NOT EXISTS vendors (
   deleted_at TIMESTAMP
 );
 
+-- 4a. CATEGORIES (Activity types)
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  icon VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 4b. LOCATIONS (Maui regions)
+CREATE TABLE IF NOT EXISTS locations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  region VARCHAR(50),
+  description TEXT,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
 -- 5. ACTIVITIES (Listings with links to real vendor prices)
 CREATE TABLE IF NOT EXISTS activities (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -187,6 +207,62 @@ INSERT INTO locations (name, region, latitude, longitude) VALUES
   ('Honolua Bay', 'West Maui', 20.9996, -156.6457)
   ON CONFLICT (name) DO NOTHING;
 
+-- PRICE MONITORING TABLES
+-- 8. PRICE HISTORY (Track all price changes)
+CREATE TABLE IF NOT EXISTS price_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  old_price DECIMAL(10,2),
+  new_price DECIMAL(10,2) NOT NULL,
+  price_change DECIMAL(10,2),
+  price_change_percent DECIMAL(5,2),
+  discount_detected VARCHAR(100),
+  scraped_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_activity_id (activity_id),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_scraped_at (scraped_at)
+);
+
+-- 9. SPECIAL DEALS (Flagged discounted activities)
+CREATE TABLE IF NOT EXISTS special_deals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  activity_id UUID REFERENCES activities(id) ON DELETE SET NULL,
+  deal_title VARCHAR(255) NOT NULL,
+  deal_description TEXT,
+  discount_percent DECIMAL(5,2),
+  discount_amount DECIMAL(10,2),
+  original_price DECIMAL(10,2),
+  deal_price DECIMAL(10,2),
+  deal_start_date TIMESTAMP,
+  deal_end_date TIMESTAMP,
+  deal_url VARCHAR(500),
+  is_active BOOLEAN DEFAULT TRUE,
+  scraped_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_is_active (is_active),
+  INDEX idx_deal_end_date (deal_end_date)
+);
+
+-- 10. SCRAPER LOGS (Monitor scraper performance)
+CREATE TABLE IF NOT EXISTS scraper_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  status VARCHAR(50) NOT NULL, -- success, failed, timeout, blocked, rate_limited
+  items_found INTEGER DEFAULT 0,
+  prices_updated INTEGER DEFAULT 0,
+  deals_found INTEGER DEFAULT 0,
+  error_message TEXT,
+  execution_time_ms INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+);
+
 -- Enable RLS (Row Level Security)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
@@ -202,6 +278,9 @@ CREATE POLICY "reviews_select" ON reviews FOR SELECT USING (true);
 CREATE POLICY "categories_select" ON categories FOR SELECT USING (true);
 CREATE POLICY "locations_select" ON locations FOR SELECT USING (true);
 CREATE POLICY "favorites_select" ON user_favorites FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "price_history_select" ON price_history FOR SELECT USING (true);
+CREATE POLICY "special_deals_select" ON special_deals FOR SELECT USING (is_active = true);
+CREATE POLICY "scraper_logs_select" ON scraper_logs FOR SELECT USING (auth.uid() IN (SELECT id FROM vendors WHERE vendors.id = scraper_logs.vendor_id));
 
 -- Indexes for performance
 CREATE INDEX idx_activities_vendor ON activities(vendor_id);
