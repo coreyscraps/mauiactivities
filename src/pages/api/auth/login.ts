@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/supabase';
 import { comparePassword, generateToken } from '@/lib/auth';
 
@@ -6,9 +6,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
+    return res.status(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -20,7 +20,7 @@ export default async function handler(req: NextRequest) {
 
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Email and password are required' },
         { status: 400 }
       );
@@ -34,7 +34,7 @@ export default async function handler(req: NextRequest) {
       .single();
 
     if (error || !user) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
@@ -42,7 +42,7 @@ export default async function handler(req: NextRequest) {
 
     // Check if user is deleted
     if (user.deleted_at) {
-      return NextResponse.json(
+      return res.status(
         { error: 'User account has been deleted' },
         { status: 401 }
       );
@@ -51,7 +51,7 @@ export default async function handler(req: NextRequest) {
     // Compare password
     const passwordMatch = await comparePassword(password, user.password_hash);
     if (!passwordMatch) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
@@ -70,7 +70,7 @@ export default async function handler(req: NextRequest) {
       isVendor: user.is_vendor,
     });
 
-    return NextResponse.json(
+    return res.status(
       {
         message: 'Login successful',
         user: {
@@ -86,7 +86,7 @@ export default async function handler(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in login:', error);
-    return NextResponse.json(
+    return res.status(
       { error: 'Internal server error' },
       { status: 500 }
     );

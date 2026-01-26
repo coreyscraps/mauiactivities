@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { supabaseAdmin } from '@/lib/supabase';
 import { hashPassword, generateToken, calculatePassExpiryDate } from '@/lib/auth';
 import { sendWelcomeEmail } from '@/lib/email';
@@ -7,9 +7,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
-    return NextResponse.json(
+    return res.status(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -21,14 +21,14 @@ export default async function handler(req: NextRequest) {
 
     // Validate input
     if (!email || !password) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Email and password are required' },
         { status: 400 }
       );
     }
 
     if (password.length < 8) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Password must be at least 8 characters' },
         { status: 400 }
       );
@@ -42,7 +42,7 @@ export default async function handler(req: NextRequest) {
       .single();
 
     if (existingUser) {
-      return NextResponse.json(
+      return res.status(
         { error: 'User already exists' },
         { status: 409 }
       );
@@ -69,7 +69,7 @@ export default async function handler(req: NextRequest) {
 
     if (error) {
       console.error('Error creating user:', error);
-      return NextResponse.json(
+      return res.status(
         { error: 'Failed to create user' },
         { status: 500 }
       );
@@ -90,7 +90,7 @@ export default async function handler(req: NextRequest) {
       // Continue even if email fails
     }
 
-    return NextResponse.json(
+    return res.status(
       {
         message: 'User created successfully',
         user: {
@@ -105,7 +105,7 @@ export default async function handler(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in signup:', error);
-    return NextResponse.json(
+    return res.status(
       { error: 'Internal server error' },
       { status: 500 }
     );

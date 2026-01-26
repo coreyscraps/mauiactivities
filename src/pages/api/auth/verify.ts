@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, isPassExpired, getDaysUntilExpiry } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,9 +6,9 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'GET') {
-    return NextResponse.json(
+    return res.status(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -18,7 +18,7 @@ export default async function handler(req: NextRequest) {
     // Verify JWT token
     const payload = await verifyAuth(req);
     if (!payload) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Unauthorized' },
         { status: 401 }
       );
@@ -32,7 +32,7 @@ export default async function handler(req: NextRequest) {
       .single();
 
     if (error || !user) {
-      return NextResponse.json(
+      return res.status(
         { error: 'User not found' },
         { status: 404 }
       );
@@ -41,7 +41,7 @@ export default async function handler(req: NextRequest) {
     const passExpired = isPassExpired(user.pass_expires_at);
     const daysUntilExpiry = getDaysUntilExpiry(user.pass_expires_at);
 
-    return NextResponse.json(
+    return res.status(
       {
         valid: true,
         user: {
@@ -58,7 +58,7 @@ export default async function handler(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in verify:', error);
-    return NextResponse.json(
+    return res.status(
       { error: 'Internal server error' },
       { status: 500 }
     );

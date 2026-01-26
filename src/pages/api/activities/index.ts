@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { verifyAuth, requireVendor, unauthorizedResponse } from '@/lib/auth';
 import { supabaseAdmin } from '@/lib/supabase';
 
@@ -6,13 +6,13 @@ export const config = {
   runtime: 'nodejs',
 };
 
-export default async function handler(req: NextRequest) {
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'GET') {
     return handleGet(req);
   } else if (req.method === 'POST') {
     return handlePost(req);
   } else {
-    return NextResponse.json(
+    return res.status(
       { error: 'Method not allowed' },
       { status: 405 }
     );
@@ -50,7 +50,7 @@ async function handleGet(req: NextRequest) {
       throw error;
     }
 
-    return NextResponse.json(
+    return res.status(
       {
         activities: data || [],
         pagination: {
@@ -64,7 +64,7 @@ async function handleGet(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error fetching activities:', error);
-    return NextResponse.json(
+    return res.status(
       { error: 'Failed to fetch activities' },
       { status: 500 }
     );
@@ -81,7 +81,7 @@ async function handlePost(req: NextRequest) {
 
     // Check if vendor
     if (!requireVendor(payload)) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Only vendors can create activities' },
         { status: 403 }
       );
@@ -111,7 +111,7 @@ async function handlePost(req: NextRequest) {
       .single();
 
     if (vendorError || !vendor) {
-      return NextResponse.json(
+      return res.status(
         { error: 'Vendor profile not found' },
         { status: 404 }
       );
@@ -141,13 +141,13 @@ async function handlePost(req: NextRequest) {
 
     if (error) {
       console.error('Error creating activity:', error);
-      return NextResponse.json(
+      return res.status(
         { error: 'Failed to create activity' },
         { status: 500 }
       );
     }
 
-    return NextResponse.json(
+    return res.status(
       {
         message: 'Activity created successfully',
         activity,
@@ -156,7 +156,7 @@ async function handlePost(req: NextRequest) {
     );
   } catch (error) {
     console.error('Error in POST /api/activities:', error);
-    return NextResponse.json(
+    return res.status(
       { error: 'Internal server error' },
       { status: 500 }
     );
