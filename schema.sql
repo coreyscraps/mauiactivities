@@ -1,272 +1,293 @@
--- Maui Activities Hub - Database Schema
--- Supabase PostgreSQL Schema
+-- Maui Activities Hub - Directory & Aggregation Platform
+-- Business Model: Users pay $10 for pass, Vendors pay $99/month to list
 
--- Enable necessary extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "http";
+-- 1. CATEGORIES (Activity types)
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  icon VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
 
--- Users Table
+-- 2. LOCATIONS (Maui regions)
+CREATE TABLE IF NOT EXISTS locations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  region VARCHAR(50),
+  latitude DECIMAL(10,7),
+  longitude DECIMAL(10,7),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 3. USERS (Customers buying $10 pass)
 CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  email VARCHAR(255) UNIQUE NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  subscription_status VARCHAR(50) DEFAULT 'free' CHECK (subscription_status IN ('free', 'active', 'expired', 'cancelled')),
-  pass_expires_at TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  last_login TIMESTAMP WITH TIME ZONE,
-  is_vendor BOOLEAN DEFAULT FALSE,
-  is_admin BOOLEAN DEFAULT FALSE,
-  deleted_at TIMESTAMP WITH TIME ZONE
-);
-
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_subscription_status ON users(subscription_status);
-CREATE INDEX idx_users_pass_expires_at ON users(pass_expires_at);
-
--- Vendors Table
-CREATE TABLE IF NOT EXISTS vendors (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  business_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL,
-  contact_person VARCHAR(255),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255),
+  name VARCHAR(255),
   phone VARCHAR(20),
-  website VARCHAR(255),
-  plan VARCHAR(50) DEFAULT 'affiliate' CHECK (plan IN ('premium', 'affiliate')),
-  monthly_fee DECIMAL(10, 2) DEFAULT 0,
-  per_booking_fee DECIMAL(5, 2) DEFAULT 0,
-  commission_rate DECIMAL(5, 2) DEFAULT 15.00,
-  stripe_account_id VARCHAR(255),
-  bio TEXT,
-  logo_url VARCHAR(255),
-  verified BOOLEAN DEFAULT FALSE,
-  verification_date TIMESTAMP WITH TIME ZONE,
-  activities_count INT DEFAULT 0,
-  total_clicks INT DEFAULT 0,
-  total_conversions INT DEFAULT 0,
-  total_earnings DECIMAL(12, 2) DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP WITH TIME ZONE
+  pass_status VARCHAR(50) DEFAULT 'inactive', -- inactive, active, expired
+  pass_expiry_date TIMESTAMP,
+  pass_purchased_at TIMESTAMP,
+  pass_renewal_count INTEGER DEFAULT 0,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  deleted_at TIMESTAMP
 );
 
-CREATE INDEX idx_vendors_user_id ON vendors(user_id);
-CREATE INDEX idx_vendors_business_name ON vendors(business_name);
-CREATE INDEX idx_vendors_verified ON vendors(verified);
+-- 4. VENDORS (Tour operators paying $99/month)
+CREATE TABLE IF NOT EXISTS vendors (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  phone VARCHAR(20),
+  website VARCHAR(255) NOT NULL,
+  description TEXT,
+  logo_url VARCHAR(255),
+  subscription_status VARCHAR(50) DEFAULT 'inactive', -- inactive, active, paused, cancelled
+  subscription_price DECIMAL(10,2) DEFAULT 99.00,
+  subscription_renewal_date TIMESTAMP,
+  stripe_subscription_id VARCHAR(255),
+  stripe_customer_id VARCHAR(255),
+  approved BOOLEAN DEFAULT FALSE,
+  featured BOOLEAN DEFAULT FALSE,
+  rating DECIMAL(3,2) DEFAULT 0,
+  review_count INTEGER DEFAULT 0,
+  contact_person VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  deleted_at TIMESTAMP
+);
 
--- Activities Table
+-- 4a. CATEGORIES (Activity types)
+CREATE TABLE IF NOT EXISTS categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT,
+  icon VARCHAR(50),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 4b. LOCATIONS (Maui regions)
+CREATE TABLE IF NOT EXISTS locations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(100) NOT NULL UNIQUE,
+  region VARCHAR(50),
+  description TEXT,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+-- 5. ACTIVITIES (Listings with links to real vendor prices)
 CREATE TABLE IF NOT EXISTS activities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
   name VARCHAR(255) NOT NULL,
-  type VARCHAR(100) NOT NULL,
   description TEXT,
-  location VARCHAR(255) NOT NULL,
-  duration_minutes INT,
-  difficulty_level VARCHAR(50) CHECK (difficulty_level IN ('easy', 'moderate', 'hard', 'extreme')),
-  max_participants INT,
-  min_age INT,
-  prices JSONB DEFAULT '{}',
-  insider_discount DECIMAL(5, 2) DEFAULT 0,
-  photos JSONB DEFAULT '[]',
-  rating DECIMAL(3, 2) DEFAULT 0,
-  review_count INT DEFAULT 0,
-  status VARCHAR(50) DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived', 'suspended')),
-  tags JSONB DEFAULT '[]',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP WITH TIME ZONE,
-  is_featured BOOLEAN DEFAULT FALSE
+  category_id UUID REFERENCES categories(id),
+  location_id UUID REFERENCES locations(id),
+  duration_minutes INTEGER,
+  group_size_min INTEGER DEFAULT 1,
+  group_size_max INTEGER DEFAULT 20,
+  difficulty_level VARCHAR(50), -- easy, moderate, hard
+  status VARCHAR(50) DEFAULT 'published', -- draft, published, paused, archived
+  image_url VARCHAR(255),
+  images JSONB, -- Array of image URLs
+  -- PRICE TRACKING (Real prices from vendor websites)
+  base_price DECIMAL(10,2) NOT NULL, -- Current vendor price
+  currency VARCHAR(3) DEFAULT 'USD',
+  price_source VARCHAR(100), -- 'vendor_website', 'viator', 'getyourguide', etc.
+  original_price DECIMAL(10,2), -- Original price (for discount calculation)
+  discount_percent DECIMAL(5,2) DEFAULT 0, -- Calculated discount %
+  price_last_updated TIMESTAMP,
+  booking_url VARCHAR(500), -- Link to vendor's booking page
+  -- POPULARITY & ENGAGEMENT
+  view_count INTEGER DEFAULT 0,
+  booking_count INTEGER DEFAULT 0, -- Click-throughs to vendor
+  favorite_count INTEGER DEFAULT 0,
+  -- RATINGS & REVIEWS
+  rating DECIMAL(3,2) DEFAULT 0, -- Average rating
+  review_count INTEGER DEFAULT 0,
+  -- VENDOR DISCOUNT
+  insider_discount DECIMAL(5,2) DEFAULT 0, -- If vendor offers discount to pass holders
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  deleted_at TIMESTAMP,
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_category_id (category_id),
+  INDEX idx_location_id (location_id),
+  INDEX idx_base_price (base_price),
+  INDEX idx_rating (rating),
+  INDEX idx_view_count (view_count),
+  INDEX idx_status (status)
 );
 
-CREATE INDEX idx_activities_vendor_id ON activities(vendor_id);
-CREATE INDEX idx_activities_type ON activities(type);
-CREATE INDEX idx_activities_location ON activities(location);
-CREATE INDEX idx_activities_status ON activities(status);
-CREATE INDEX idx_activities_is_featured ON activities(is_featured);
-CREATE INDEX idx_activities_rating ON activities(rating);
+-- 6. USER FAVORITES (Users saving activities they're interested in)
+CREATE TABLE IF NOT EXISTS user_favorites (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  created_at TIMESTAMP DEFAULT NOW(),
+  UNIQUE(user_id, activity_id)
+);
 
--- Reviews Table
+-- 7. USER PASS PAYMENTS (Only charge for pass renewals)
+CREATE TABLE IF NOT EXISTS pass_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  amount DECIMAL(10,2) DEFAULT 10.00,
+  currency VARCHAR(3) DEFAULT 'USD',
+  status VARCHAR(50) DEFAULT 'pending', -- pending, completed, failed, refunded
+  stripe_payment_intent_id VARCHAR(255) UNIQUE,
+  stripe_charge_id VARCHAR(255),
+  receipt_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_user_id (user_id),
+  INDEX idx_status (status)
+);
+
+-- 8. VENDOR SUBSCRIPTION PAYMENTS ($99/month billing)
+CREATE TABLE IF NOT EXISTS vendor_subscription_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id),
+  amount DECIMAL(10,2) DEFAULT 99.00,
+  currency VARCHAR(3) DEFAULT 'USD',
+  billing_period_start TIMESTAMP,
+  billing_period_end TIMESTAMP,
+  status VARCHAR(50) DEFAULT 'pending', -- pending, completed, failed, refunded
+  stripe_invoice_id VARCHAR(255),
+  stripe_payment_intent_id VARCHAR(255),
+  receipt_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_status (status)
+);
+
+-- 9. REVIEWS (User feedback on activities)
 CREATE TABLE IF NOT EXISTS reviews (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+  rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
   title VARCHAR(255),
-  text TEXT,
-  verified BOOLEAN DEFAULT FALSE,
-  helpful_count INT DEFAULT 0,
-  unhelpful_count INT DEFAULT 0,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  deleted_at TIMESTAMP WITH TIME ZONE
+  comment TEXT,
+  helpful_count INTEGER DEFAULT 0,
+  verified_user BOOLEAN DEFAULT FALSE, -- Has active pass
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_activity_id (activity_id),
+  INDEX idx_user_id (user_id)
 );
 
-CREATE INDEX idx_reviews_activity_id ON reviews(activity_id);
-CREATE INDEX idx_reviews_user_id ON reviews(user_id);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_verified ON reviews(verified);
+-- INSERT DEFAULT CATEGORIES
+INSERT INTO categories (name, description, icon) VALUES
+  ('Water Activities', 'Snorkeling, diving, surfing, whale watching, boat tours', 'water'),
+  ('Land Tours', 'Hiking, volcano tours, scenic drives, national parks', 'mountain'),
+  ('Adventure', 'Zip-lining, parasailing, ATV, jet ski, climbing', 'zap'),
+  ('Cultural', 'Luaus, local tours, historical sites, temples', 'users'),
+  ('Wellness', 'Yoga, spa, meditation, wellness retreats', 'heart'),
+  ('Dining', 'Sunset dinners, cooking classes, food tours', 'utensils')
+  ON CONFLICT (name) DO NOTHING;
 
--- Bookings Table (for affiliate tracking)
-CREATE TABLE IF NOT EXISTS bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE SET NULL,
-  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE SET NULL,
-  booking_date DATE,
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'completed', 'cancelled', 'refunded')),
-  conversion_status VARCHAR(50) DEFAULT 'click' CHECK (conversion_status IN ('click', 'conversion', 'refunded')),
-  affiliate_source VARCHAR(100),
-  commission_amount DECIMAL(10, 2),
-  total_price DECIMAL(10, 2),
-  external_booking_id VARCHAR(255),
-  external_platform VARCHAR(100) CHECK (external_platform IN ('viator', 'getyourguide', 'direct', 'other')),
-  notes TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+-- INSERT DEFAULT LOCATIONS (Maui regions)
+INSERT INTO locations (name, region, latitude, longitude) VALUES
+  ('Wailea', 'South Maui', 20.7517, -156.4393),
+  ('Kihei', 'South Maui', 20.7881, -156.4453),
+  ('Lahaina', 'West Maui', 20.8783, -156.6756),
+  ('Kapalua', 'West Maui', 20.9743, -156.6437),
+  ('Kaanapali', 'West Maui', 20.9248, -156.7070),
+  ('Wailuku', 'Central Maui', 20.8942, -156.5000),
+  ('Haleakala National Park', 'Upcountry', 20.7970, -156.1551),
+  ('Road to Hana', 'East Maui', 20.8000, -156.1000),
+  ('Paia', 'North Shore', 20.9000, -156.3739),
+  ('Honolua Bay', 'West Maui', 20.9996, -156.6457)
+  ON CONFLICT (name) DO NOTHING;
+
+-- PRICE MONITORING TABLES
+-- 8. PRICE HISTORY (Track all price changes)
+CREATE TABLE IF NOT EXISTS price_history (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  activity_id UUID NOT NULL REFERENCES activities(id) ON DELETE CASCADE,
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  old_price DECIMAL(10,2),
+  new_price DECIMAL(10,2) NOT NULL,
+  price_change DECIMAL(10,2),
+  price_change_percent DECIMAL(5,2),
+  discount_detected VARCHAR(100),
+  scraped_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_activity_id (activity_id),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_scraped_at (scraped_at)
 );
 
-CREATE INDEX idx_bookings_user_id ON bookings(user_id);
-CREATE INDEX idx_bookings_activity_id ON bookings(activity_id);
-CREATE INDEX idx_bookings_vendor_id ON bookings(vendor_id);
-CREATE INDEX idx_bookings_conversion_status ON bookings(conversion_status);
-CREATE INDEX idx_bookings_created_at ON bookings(created_at);
-
--- Payments Table
-CREATE TABLE IF NOT EXISTS payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  amount DECIMAL(10, 2) NOT NULL,
-  currency VARCHAR(3) DEFAULT 'USD',
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'succeeded', 'failed', 'cancelled', 'refunded')),
-  payment_type VARCHAR(50) CHECK (payment_type IN ('pass_renewal', 'vendor_subscription', 'commission')),
-  stripe_payment_intent_id VARCHAR(255),
-  stripe_charge_id VARCHAR(255),
-  vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
-  metadata JSONB DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX idx_payments_user_id ON payments(user_id);
-CREATE INDEX idx_payments_vendor_id ON payments(vendor_id);
-CREATE INDEX idx_payments_status ON payments(status);
-CREATE INDEX idx_payments_stripe_payment_intent_id ON payments(stripe_payment_intent_id);
-
--- Email Logs Table
-CREATE TABLE IF NOT EXISTS email_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
-  email_type VARCHAR(100),
-  recipient_email VARCHAR(255),
-  status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'sent', 'failed', 'bounced')),
-  sendgrid_message_id VARCHAR(255),
-  error_message TEXT,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-  sent_at TIMESTAMP WITH TIME ZONE
-);
-
-CREATE INDEX idx_email_logs_user_id ON email_logs(user_id);
-CREATE INDEX idx_email_logs_email_type ON email_logs(email_type);
-CREATE INDEX idx_email_logs_status ON email_logs(status);
-
--- Analytics Events Table
-CREATE TABLE IF NOT EXISTS analytics_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+-- 9. SPECIAL DEALS (Flagged discounted activities)
+CREATE TABLE IF NOT EXISTS special_deals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
   activity_id UUID REFERENCES activities(id) ON DELETE SET NULL,
-  vendor_id UUID REFERENCES vendors(id) ON DELETE SET NULL,
-  event_type VARCHAR(100),
-  event_data JSONB DEFAULT '{}',
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+  deal_title VARCHAR(255) NOT NULL,
+  deal_description TEXT,
+  discount_percent DECIMAL(5,2),
+  discount_amount DECIMAL(10,2),
+  original_price DECIMAL(10,2),
+  deal_price DECIMAL(10,2),
+  deal_start_date TIMESTAMP,
+  deal_end_date TIMESTAMP,
+  deal_url VARCHAR(500),
+  is_active BOOLEAN DEFAULT TRUE,
+  scraped_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_is_active (is_active),
+  INDEX idx_deal_end_date (deal_end_date)
 );
 
-CREATE INDEX idx_analytics_events_user_id ON analytics_events(user_id);
-CREATE INDEX idx_analytics_events_activity_id ON analytics_events(activity_id);
-CREATE INDEX idx_analytics_events_vendor_id ON analytics_events(vendor_id);
-CREATE INDEX idx_analytics_events_event_type ON analytics_events(event_type);
-CREATE INDEX idx_analytics_events_created_at ON analytics_events(created_at);
+-- 10. SCRAPER LOGS (Monitor scraper performance)
+CREATE TABLE IF NOT EXISTS scraper_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  vendor_id UUID NOT NULL REFERENCES vendors(id) ON DELETE CASCADE,
+  status VARCHAR(50) NOT NULL, -- success, failed, timeout, blocked, rate_limited
+  items_found INTEGER DEFAULT 0,
+  prices_updated INTEGER DEFAULT 0,
+  deals_found INTEGER DEFAULT 0,
+  error_message TEXT,
+  execution_time_ms INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  INDEX idx_vendor_id (vendor_id),
+  INDEX idx_status (status),
+  INDEX idx_created_at (created_at)
+);
 
--- Function to update updated_at timestamp
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = CURRENT_TIMESTAMP;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Triggers for updated_at
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_vendors_updated_at BEFORE UPDATE ON vendors
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_activities_updated_at BEFORE UPDATE ON activities
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_reviews_updated_at BEFORE UPDATE ON reviews
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_payments_updated_at BEFORE UPDATE ON payments
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Views for analytics
-CREATE OR REPLACE VIEW vendor_performance AS
-SELECT 
-  v.id,
-  v.business_name,
-  COUNT(DISTINCT a.id) as total_activities,
-  COUNT(DISTINCT CASE WHEN b.conversion_status = 'conversion' THEN b.id END) as total_conversions,
-  COUNT(DISTINCT CASE WHEN b.conversion_status = 'click' THEN b.id END) as total_clicks,
-  COALESCE(SUM(CASE WHEN b.conversion_status = 'conversion' THEN b.commission_amount ELSE 0 END), 0) as total_earnings,
-  ROUND(AVG(a.rating)::NUMERIC, 2) as avg_activity_rating
-FROM vendors v
-LEFT JOIN activities a ON v.id = a.vendor_id AND a.deleted_at IS NULL
-LEFT JOIN bookings b ON a.id = b.activity_id
-WHERE v.deleted_at IS NULL
-GROUP BY v.id, v.business_name;
-
--- RLS Policies (enable Row Level Security on tables)
+-- Enable RLS (Row Level Security)
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE vendors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE activities ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
-ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
--- User can view their own profile
-CREATE POLICY users_select_own ON users
-  FOR SELECT USING (auth.uid() = id);
+-- RLS POLICIES
+CREATE POLICY "users_select" ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "vendors_select" ON vendors FOR SELECT USING (approved = true OR auth.uid() = id);
+CREATE POLICY "activities_select" ON activities FOR SELECT USING (status = 'published');
+CREATE POLICY "reviews_select" ON reviews FOR SELECT USING (true);
+CREATE POLICY "categories_select" ON categories FOR SELECT USING (true);
+CREATE POLICY "locations_select" ON locations FOR SELECT USING (true);
+CREATE POLICY "favorites_select" ON user_favorites FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "price_history_select" ON price_history FOR SELECT USING (true);
+CREATE POLICY "special_deals_select" ON special_deals FOR SELECT USING (is_active = true);
+CREATE POLICY "scraper_logs_select" ON scraper_logs FOR SELECT USING (auth.uid() IN (SELECT id FROM vendors WHERE vendors.id = scraper_logs.vendor_id));
 
-CREATE POLICY users_update_own ON users
-  FOR UPDATE USING (auth.uid() = id);
-
--- Public can view published activities
-CREATE POLICY activities_select_public ON activities
-  FOR SELECT USING (status = 'published');
-
--- Vendors can view and manage their own activities
-CREATE POLICY activities_vendor_manage ON activities
-  FOR ALL USING (vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid()));
-
--- Reviews are publicly readable
-CREATE POLICY reviews_select_public ON reviews
-  FOR SELECT USING (TRUE);
-
--- Users can create their own reviews
-CREATE POLICY reviews_insert_own ON reviews
-  FOR INSERT WITH CHECK (user_id = auth.uid());
-
--- Users can view their own bookings
-CREATE POLICY bookings_select_own ON bookings
-  FOR SELECT USING (user_id = auth.uid());
-
--- Vendors can view their own payments and bookings
-CREATE POLICY bookings_vendor_view ON bookings
-  FOR SELECT USING (vendor_id IN (SELECT id FROM vendors WHERE user_id = auth.uid()));
+-- Indexes for performance
+CREATE INDEX idx_activities_vendor ON activities(vendor_id);
+CREATE INDEX idx_activities_category ON activities(category_id);
+CREATE INDEX idx_activities_location ON activities(location_id);
+CREATE INDEX idx_favorites_user ON user_favorites(user_id);
+CREATE INDEX idx_reviews_activity ON reviews(activity_id);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_vendors_email ON vendors(email);
+CREATE INDEX idx_vendors_status ON vendors(subscription_status);
