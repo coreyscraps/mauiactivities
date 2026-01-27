@@ -113,7 +113,7 @@ export default function ActivitiesPage() {
 
           if (response.ok) {
             const data = await response.json();
-            const favoriteIds = new Set(
+            const favoriteIds = new Set<string>(
               data.favorites.map((fav: any) => fav.activity_id)
             );
             setFavorites(favoriteIds);
