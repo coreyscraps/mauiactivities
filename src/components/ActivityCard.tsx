@@ -3,8 +3,9 @@
  * Displays a single activity with price, rating, vendor info
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 interface Activity {
   id: string;
@@ -43,13 +44,56 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onFavorite,
   isFavorited = false,
 }) => {
+  const { user, isLoggedIn } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [localFavorited, setLocalFavorited] = useState(isFavorited);
+  
   const savings = activity.original_price
     ? activity.original_price - activity.base_price
     : 0;
 
-  const handleFavorite = (e: React.MouseEvent) => {
+  const handleFavorite = async (e: React.MouseEvent) => {
     e.preventDefault();
-    onFavorite?.(activity.id);
+    
+    if (!isLoggedIn) {
+      // Redirect to login if not authenticated
+      window.location.href = '/auth/login';
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      if (localFavorited) {
+        // Remove from favorites
+        await fetch('/api/users/favorites', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user?.id || '',
+          },
+          body: JSON.stringify({ activity_id: activity.id }),
+        });
+        setLocalFavorited(false);
+      } else {
+        // Add to favorites
+        await fetch('/api/users/favorites', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-user-id': user?.id || '',
+          },
+          body: JSON.stringify({ activity_id: activity.id }),
+        });
+        setLocalFavorited(true);
+      }
+
+      onFavorite?.(activity.id);
+    } catch (error) {
+      console.error('Error updating favorite:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -75,11 +119,12 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
         )}
 
         <button
-          className={`favorite-btn ${isFavorited ? 'favorited' : ''}`}
+          className={`favorite-btn ${localFavorited ? 'favorited' : ''}`}
           onClick={handleFavorite}
-          title="Save to favorites"
+          disabled={loading}
+          title={isLoggedIn ? "Save to favorites" : "Log in to save favorites"}
         >
-          ♥
+          {loading ? '...' : '♥'}
         </button>
       </div>
 
