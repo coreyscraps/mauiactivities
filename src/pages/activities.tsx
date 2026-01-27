@@ -5,6 +5,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import Head from 'next/head';
+import { useAuth } from '@/lib/auth-context';
 import { SearchFilters } from '@/components/SearchFilters';
 import { ActivityCard } from '@/components/ActivityCard';
 import { DealsShowcase } from '@/components/DealsShowcase';
@@ -57,6 +58,7 @@ interface FilterOptions {
 }
 
 export default function ActivitiesPage() {
+  const { user, isLoggedIn } = useAuth();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -96,6 +98,34 @@ export default function ActivitiesPage() {
 
     loadMetadata();
   }, []);
+
+  // Load user favorites when logged in
+  useEffect(() => {
+    if (isLoggedIn && user?.id) {
+      const loadFavorites = async () => {
+        try {
+          const response = await fetch('/api/users/favorites', {
+            method: 'GET',
+            headers: {
+              'x-user-id': user.id,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const favoriteIds = new Set(
+              data.favorites.map((fav: any) => fav.activity_id)
+            );
+            setFavorites(favoriteIds);
+          }
+        } catch (err) {
+          console.error('Failed to load favorites:', err);
+        }
+      };
+
+      loadFavorites();
+    }
+  }, [isLoggedIn, user?.id]);
 
   // Search activities when filters change
   useEffect(() => {
@@ -156,7 +186,6 @@ export default function ActivitiesPage() {
       }
       return next;
     });
-    // TODO: Save to backend
   }, []);
 
   return (
