@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/cron/price-monitor?secret=a27e9617e313b8c04224e42e6eea1ac263bea9542b4277d9521902aef604486b",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }

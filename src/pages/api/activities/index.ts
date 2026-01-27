@@ -18,24 +18,52 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
 async function handleGet(req: NextApiRequest, res: NextApiResponse) {
   try {
-    const { searchParams } = new URL(req.url || '/');
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const type = searchParams.get('type');
-    const location = searchParams.get('location');
+    const page = parseInt((req.query.page as string) || '1');
+    const limit = parseInt((req.query.limit as string) || '20');
+    const categoryId = req.query.category_id as string;
+    const locationId = req.query.location_id as string;
 
     let query = supabaseAdmin
       .from('activities')
-      .select('*')
+      .select(
+        `
+        id,
+        name,
+        description,
+        base_price,
+        currency,
+        rating,
+        review_count,
+        view_count,
+        booking_count,
+        image_url,
+        images,
+        booking_url,
+        duration_minutes,
+        difficulty_level,
+        group_size_min,
+        group_size_max,
+        insider_discount,
+        vendor_id,
+        category_id,
+        location_id,
+        status,
+        created_at,
+        vendors(id, name, rating, review_count, website),
+        categories(id, name),
+        locations(id, name, region)
+        `,
+        { count: 'exact' }
+      )
       .eq('status', 'published')
       .order('created_at', { ascending: false });
 
-    if (type) {
-      query = query.eq('type', type);
+    if (categoryId) {
+      query = query.eq('category_id', categoryId);
     }
 
-    if (location) {
-      query = query.ilike('location', `%${location}%`);
+    if (locationId) {
+      query = query.eq('location_id', locationId);
     }
 
     const { data, error, count } = await query.range(
@@ -79,17 +107,19 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const {
       name,
-      type,
-      location,
       description,
-      durationMinutes,
-      difficultyLevel,
-      maxParticipants,
-      minAge,
-      prices,
-      insiderDiscount,
-      photos,
-      tags,
+      category_id,
+      location_id,
+      duration_minutes,
+      difficulty_level,
+      group_size_min,
+      group_size_max,
+      base_price,
+      currency,
+      image_url,
+      images,
+      booking_url,
+      insider_discount,
     } = body;
 
     // Get vendor
@@ -109,17 +139,19 @@ async function handlePost(req: NextApiRequest, res: NextApiResponse) {
       .insert({
         vendor_id: vendor.id,
         name,
-        type,
-        location,
         description,
-        duration_minutes: durationMinutes,
-        difficulty_level: difficultyLevel,
-        max_participants: maxParticipants,
-        min_age: minAge,
-        prices: prices || {},
-        insider_discount: insiderDiscount || 0,
-        photos: photos || [],
-        tags: tags || [],
+        category_id,
+        location_id,
+        duration_minutes,
+        difficulty_level,
+        group_size_min,
+        group_size_max,
+        base_price,
+        currency: currency || 'USD',
+        image_url,
+        images: images || [],
+        booking_url,
+        insider_discount: insider_discount || 0,
         status: 'draft',
       })
       .select()

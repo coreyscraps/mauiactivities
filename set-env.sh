@@ -1,0 +1,39 @@
+#!/bin/bash
+TOKEN="UsxZ8kHRCekxOWqvebQrjBeB"
+
+# Set all environment variables
+npx vercel env add NEXT_PUBLIC_SUPABASE_URL=https://gpnaidjjekmdkeysdxhm.supabase.co --token $TOKEN
+npx vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_Btwguy6SiLYS-M2puxDjhg_6qkM51JB --token $TOKEN
+npx vercel env add SUPABASE_SERVICE_ROLE_KEY=sb_secret_MzGYDgDnQ7buC39Wpy3aDQ_ASfkUQCD --token $TOKEN
+npx vercel env add JWT_SECRET=maui-activities-jwt-secret-min-32-chars-long-key-2024 --token $TOKEN
+npx vercel env add JWT_EXPIRY=7d --token $TOKEN
+npx vercel env add STRIPE_SECRET_KEY=sk_test_placeholder --token $TOKEN
+npx vercel env add STRIPE_PUBLISHABLE_KEY=pk_test_placeholder --token $TOKEN
+npx vercel env add STRIPE_WEBHOOK_SECRET=whsec_test_placeholder --token $TOKEN
+npx vercel env add NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_placeholder --token $TOKEN
+npx vercel env add RESEND_API_KEY=re_UcTwYqFC_6UxtwUWdJ8gRKNGhEVtjTXZ5 --token $TOKEN
+npx vercel env add SENDGRID_FROM_EMAIL=noreply@mauiactivitieshu.com --token $TOKEN
+npx vercel env add SENDGRID_TEMPLATE_WELCOME=d-welcome123 --token $TOKEN
+npx vercel env add SENDGRID_TEMPLATE_PASS_EXPIRY_30=d-expiry30d123 --token $TOKEN
+npx vercel env add SENDGRID_TEMPLATE_PASS_EXPIRY_7=d-expiry7d123 --token $TOKEN
+npx vercel env add SENDGRID_TEMPLATE_RENEWAL_OFFER=d-renewal123 --token $TOKEN
+npx vercel env add SENDGRID_TEMPLATE_VENDOR_ONBOARDING=d-vendor123 --token $TOKEN
+npx vercel env add NODE_ENV=production --token $TOKEN
+npx vercel env add NEXT_PUBLIC_API_URL=https://maui-backend-repo.vercel.app --token $TOKEN
+npx vercel env add NEXT_PUBLIC_APP_NAME=Maui\ Activities\ Hub --token $TOKEN
+npx vercel env add PRICE_MONITOR_CRON_SECRET=a27e9617e313b8c04224e42e6eea1ac263bea9542b4277d9521902aef604486b --token $TOKEN
+npx vercel env add PASS_VALIDITY_DAYS=180 --token $TOKEN
+npx vercel env add PASS_RENEWAL_COST=10 --token $TOKEN
+npx vercel env add DEFAULT_AFFILIATE_COMMISSION_RATE=15 --token $TOKEN
+npx vercel env add VIATOR_AFFILIATE_ID=test-viator-id --token $TOKEN
+npx vercel env add GETYOURGUIDE_AFFILIATE_ID=test-getyourguide-id --token $TOKEN
+npx vercel env add SMTP_HOST=smtp.sendgrid.net --token $TOKEN
+npx vercel env add SMTP_PORT=587 --token $TOKEN
+npx vercel env add SMTP_USER=apikey --token $TOKEN
+npx vercel env add ADMIN_EMAIL=admin@mauiactivitieshu.com --token $TOKEN
+npx vercel env add ADMIN_PASSWORD_HASH=test-hash-placeholder --token $TOKEN
+npx vercel env add LOG_LEVEL=info --token $TOKEN
+npx vercel env add ENABLE_VENDOR_SIGNUP=true --token $TOKEN
+npx vercel env add ENABLE_REVIEWS=true --token $TOKEN
+npx vercel env add ENABLE_AFFILIATE_TRACKING=true --token $TOKEN
+npx vercel env add MAINTENANCE_MODE=false --token $TOKEN
