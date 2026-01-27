@@ -1,12 +1,10 @@
-import sgMail from '@sendgrid/mail';
+import { Resend } from 'resend';
 import { supabaseAdmin } from './supabase';
 
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || '';
-const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@mauiactivitieshu.com';
+const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@mauiactivitieshu.com';
 
-if (SENDGRID_API_KEY) {
-  sgMail.setApiKey(SENDGRID_API_KEY);
-}
+const resend = new Resend(RESEND_API_KEY);
 
 export interface EmailTemplate {
   to: string;
@@ -173,28 +171,27 @@ export async function logAndSendEmail(
     }
 
     // Send email
-    if (SENDGRID_API_KEY) {
-      const msg = {
-        to: mailOptions.to,
+    if (RESEND_API_KEY) {
+      const response = await resend.emails.send({
         from: FROM_EMAIL,
+        to: mailOptions.to,
         subject: mailOptions.subject,
         html: mailOptions.html,
-        text: mailOptions.text || mailOptions.html,
-      };
-
-      const response = await sgMail.send(msg);
+      });
 
       // Update email log with success
-      if (response[0].statusCode === 202) {
+      if (response.data?.id) {
         await supabaseAdmin
           .from('email_logs')
           .update({
             status: 'sent',
             sent_at: new Date().toISOString(),
-            sendgrid_message_id: response[0].headers['x-message-id'],
+            resend_message_id: response.data.id,
           })
           .eq('recipient_email', recipientEmail)
           .eq('email_type', emailType);
+      } else if (response.error) {
+        throw new Error(`Resend error: ${response.error.message}`);
       }
     }
   } catch (error) {
