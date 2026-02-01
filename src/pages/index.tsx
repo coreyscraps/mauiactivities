@@ -1,231 +1,558 @@
 import React from 'react';
-import Link from 'next/link';
 import Head from 'next/head';
-import styles from '../styles/home.module.css';
-
-const SOLUTION_CARDS = [
-  {
-    icon: '\u{1F4CA}',
-    title: 'Unbiased Comparisons',
-    desc: "We don\u2019t earn commissions, so we have zero incentive to push one activity over another. Compare based on actual quality and fit.",
-  },
-  {
-    icon: '\u{1F4B0}',
-    title: 'Real Vendor Prices',
-    desc: 'Prices pulled directly from vendor websites. What you see is what you\u2019ll pay when you book direct\u2014no markup, no surprises.',
-  },
-  {
-    icon: '\u{1F517}',
-    title: 'Book Directly',
-    desc: 'Click through to vendor websites and book straight with them. They save on commissions, and you get authentic service.',
-  },
-  {
-    icon: '\u{1F334}',
-    title: 'See Everything',
-    desc: 'All activities in one place\u2014from major operators to hidden local gems. No more endless tab-hopping to compare options.',
-  },
-];
-
-const FEATURES = [
-  { icon: '\u{1F50D}', title: 'Price Comparison', desc: 'See prices from every vendor side-by-side. Find the best deal without the markup.' },
-  { icon: '\u26A1', title: 'Real-Time Availability', desc: 'See which activities have openings today or tomorrow. \u201CBook Now\u201D badges for immediate plans.' },
-  { icon: '\u2B50', title: 'Unbiased Reviews', desc: 'Honest ratings from real travelers. No commission means no bias in our recommendations.' },
-  { icon: '\u{1F514}', title: 'Price Alerts', desc: 'Get notified when activities on your wishlist drop in price. Never miss a deal.' },
-  { icon: '\u{1F48E}', title: 'Hidden Gems', desc: 'Discover amazing local spots that don\u2019t show up on commission sites. Support small businesses.' },
-  { icon: '\u{1F324}\uFE0F', title: 'Weather-Based Tips', desc: 'Smart recommendations based on current forecasts. \u201CPerfect beach day\u201D or \u201Crainy day activities.\u201D' },
-  { icon: '\u{1F916}', title: 'AI Itinerary Planner', desc: 'Personalized trip planning with insider tips and optimized schedules. Your perfect Maui day.' },
-  { icon: '\u{1F4F1}', title: 'Mobile Friendly', desc: 'Access from anywhere on any device. Plan on the go while exploring the island.' },
-  { icon: '\u{1F3AF}', title: 'Honest Info', desc: 'No hidden agendas. No upselling. Just straightforward information to help you decide.' },
-  { icon: '\u{1F504}', title: 'Always Updated', desc: 'Prices and availability refreshed regularly. Current information when you need it.' },
-];
-
-const STEPS = [
-  { num: 1, title: 'Subscribe', desc: 'Pay $10 once for 180 days of full access. No recurring charges, no surprises.' },
-  { num: 2, title: 'Compare', desc: 'Browse all Maui activities with real prices, honest reviews, and AI-powered recommendations.' },
-  { num: 3, title: 'Click Through', desc: "Found something perfect? Click the direct link to the vendor\u2019s website." },
-  { num: 4, title: 'Book Direct', desc: "Complete your booking on the vendor\u2019s site at the real price\u2014no middleman, no markup." },
-];
-
-const PRICING_FEATURES = [
-  'Compare all Maui activities',
-  'Real-time availability updates',
-  'Unbiased reviews and ratings',
-  'Price alerts for wishlist items',
-  'Hidden gems recommendations',
-  'Weather-based suggestions',
-  'AI itinerary planner',
-  'Direct vendor booking links',
-  'Mobile access anywhere',
-  'No recurring charges',
-];
-
-const FAQ_ITEMS = [
-  {
-    q: 'Why only $10 for 6 months?',
-    a: "We don\u2019t take commissions on bookings like other sites (which can be 10-40% per transaction). Our revenue comes from vendors paying a flat $99/month subscription to be listed\u2014way cheaper than commission fees. This lets us charge you almost nothing while giving vendors a better deal too.",
-  },
-  {
-    q: 'How is this different from other activity sites?',
-    a: 'Traditional booking sites earn 10-40% commission per booking, so they\u2019re incentivized to push expensive activities and hide cheaper alternatives. We show you everything with real prices pulled from vendor sites, with zero bias because we don\u2019t earn more when you spend more.',
-  },
-  {
-    q: 'Do you actually book the activities for me?',
-    a: "No\u2014we\u2019re an information directory, not a booking platform. We show you all your options with real prices and direct links to vendor websites. You click through and book directly with them. This saves them commission fees and ensures you get authentic service.",
-  },
-  {
-    q: 'Are the prices really the same as booking direct?',
-    a: "Yes! We pull prices directly from vendor websites in real-time. You\u2019ll pay the exact same price when you book through their site. No markup, no hidden fees.",
-  },
-  {
-    q: "What\u2019s included in the AI itinerary planner?",
-    a: 'Our AI analyzes your interests, travel dates, weather forecasts, and activity availability to create personalized day-by-day plans. You get insider tips, optimized schedules, and recommendations tailored to your preferences\u2014not our commissions.',
-  },
-  {
-    q: 'Do you cover all Maui activities?',
-    a: "We\u2019re continuously adding vendors who subscribe to our platform. Unlike commission sites that only show partners paying 10-40% fees, we include anyone paying our flat $99/month, which means better coverage of local and independent operators.",
-  },
-  {
-    q: 'Is this a recurring subscription?',
-    a: 'Nope! Pay $10 once and get 180 days of access. No auto-renewal, no recurring charges. If you want to continue after 6 months, you can resubscribe.',
-  },
-  {
-    q: 'What if I\u2019m not satisfied?',
-    a: "We offer a 30-day money-back guarantee. If Maui Activity Hub isn\u2019t helping you plan better, just let us know and we\u2019ll refund you\u2014no questions asked.",
-  },
-];
 
 export default function Home() {
   return (
     <>
       <Head>
         <title>Maui Activity Hub - Honest Activity Comparisons, Zero Commissions</title>
-        <meta
-          name="description"
-          content="Compare every Maui activity in one place with real prices pulled directly from vendor websites. Book direct and skip the commission markup. $10 for 180 days."
-        />
       </Head>
 
-      <div className={styles.page}>
-        {/* ===== HERO ===== */}
-        <section className={styles.hero}>
-          <div className={styles.container}>
-            <h1>
-              No Commissions. No Agenda.<br />
-              <span className={styles.highlight}>Just Honest Activity Comparisons.</span>
-            </h1>
-            <p>
-              Compare every Maui activity in one place with real prices pulled
-              directly from vendor websites. Book direct and skip the commission
-              markup.
-            </p>
-            <div className={styles.price}>
-              <span>$10</span> for 180 days of access
+      <style jsx global>{`
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .cta-button {
+            background: #e76f51;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+        }
+
+        .cta-button:hover {
+            background: #d1593f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(231, 111, 81, 0.4);
+        }
+
+        .hero {
+            background: linear-gradient(135deg, #01befe 0%, #0b4f6c 100%);
+            color: white;
+            padding: 6rem 0;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+
+        .hero .highlight {
+            color: #ffd166;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero .price {
+            font-size: 1.5rem;
+            margin: 2rem 0;
+            font-weight: 600;
+        }
+
+        .hero .price span {
+            font-size: 2.5rem;
+            color: #ffd166;
+        }
+
+        .solution {
+            padding: 5rem 0;
+            background: white;
+        }
+
+        .solution h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 1rem;
+            color: #0b4f6c;
+        }
+
+        .solution .subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #4a5568;
+            margin-bottom: 3rem;
+        }
+
+        .solution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .solution-card {
+            background: #f7fafc;
+            padding: 2rem;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .solution-card:hover {
+            border-color: #5fb3b3;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .solution-card h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .solution-card p {
+            color: #4a5568;
+        }
+
+        .features {
+            background: #f7fafc;
+            padding: 5rem 0;
+        }
+
+        .features h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #0b4f6c;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-card p {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .how-it-works {
+            padding: 5rem 0;
+            background: white;
+        }
+
+        .how-it-works h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #0b4f6c;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .step {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .step-number {
+            background: #5fb3b3;
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 auto 1.5rem;
+        }
+
+        .step h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+        }
+
+        .step p {
+            color: #4a5568;
+        }
+
+        .pricing {
+            background: linear-gradient(135deg, #01befe 0%, #0b4f6c 100%);
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+
+        .pricing h2 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-card {
+            background: white;
+            color: #2d3748;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 3rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .price-amount {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #e76f51;
+            margin: 1rem 0;
+        }
+
+        .price-period {
+            font-size: 1.2rem;
+            color: #718096;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            text-align: left;
+            margin: 2rem 0;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e2e8f0;
+            list-style: none;
+        }
+
+        .pricing-features li:before {
+            content: "✓ ";
+            color: #5fb3b3;
+            font-weight: bold;
+            margin-right: 0.5rem;
+        }
+
+        .faq {
+            padding: 5rem 0;
+            background: #f7fafc;
+        }
+
+        .faq h2 {
+            font-size: 2.5rem;
+            text-align: center;
+            margin-bottom: 3rem;
+            color: #0b4f6c;
+        }
+
+        .faq-item {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .faq-item h3 {
+            color: #2d3748;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .faq-item p {
+            color: #4a5568;
+            line-height: 1.8;
+        }
+
+        .final-cta {
+            background: linear-gradient(135deg, #e76f51 0%, #d1593f 100%);
+            color: white;
+            padding: 5rem 0;
+            text-align: center;
+        }
+
+        .final-cta h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .final-cta p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+        }
+
+        .cta-button-large {
+            background: white;
+            color: #e76f51;
+            padding: 1rem 3rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+
+        .cta-button-large:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1.1rem;
+            }
+
+            .solution h2, .features h2, .how-it-works h2, .pricing h2, .faq h2 {
+                font-size: 2rem;
+            }
+        }
+      `}</style>
+
+      {/* Hero */}
+      <section className="hero">
+        <div className="container">
+          <h1>No Commissions. No Agenda.<br /><span className="highlight">Just Honest Activity Comparisons.</span></h1>
+          <p>Compare every Maui activity in one place with real prices pulled directly from vendor websites. Book direct and skip the commission markup.</p>
+          <div className="price">
+            <span>$10</span> for 180 days of access
+          </div>
+          <a href="#pricing" className="cta-button">Start Exploring</a>
+        </div>
+      </section>
+
+      {/* The Solution */}
+      <section className="solution">
+        <div className="container">
+          <h2>The Maui Activity Hub Difference</h2>
+          <p className="subtitle">Honest comparisons. Real prices. Direct booking.</p>
+          <div className="solution-grid">
+            <div className="solution-card">
+              <h3>📊 Unbiased Comparisons</h3>
+              <p>We don&apos;t earn commissions, so we have zero incentive to push one activity over another. Compare based on actual quality and fit.</p>
             </div>
-            <Link href="/auth/signup" className={styles.ctaButton}>
-              Start Exploring
-            </Link>
-          </div>
-        </section>
-
-        {/* ===== SOLUTION ===== */}
-        <section className={styles.solution}>
-          <div className={styles.container}>
-            <h2>The Maui Activity Hub Difference</h2>
-            <p className={styles.subtitle}>
-              Honest comparisons. Real prices. Direct booking.
-            </p>
-            <div className={styles.solutionGrid}>
-              {SOLUTION_CARDS.map((card) => (
-                <div key={card.title} className={styles.solutionCard}>
-                  <h3>
-                    {card.icon} {card.title}
-                  </h3>
-                  <p>{card.desc}</p>
-                </div>
-              ))}
+            <div className="solution-card">
+              <h3>💰 Real Vendor Prices</h3>
+              <p>Prices pulled directly from vendor websites. What you see is what you&apos;ll pay when you book direct—no markup, no surprises.</p>
+            </div>
+            <div className="solution-card">
+              <h3>🔗 Book Directly</h3>
+              <p>Click through to vendor websites and book straight with them. They save on commissions, and you get authentic service.</p>
+            </div>
+            <div className="solution-card">
+              <h3>🌴 See Everything</h3>
+              <p>All activities in one place—from major operators to hidden local gems. No more endless tab-hopping to compare options.</p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== FEATURES ===== */}
-        <section className={styles.features}>
-          <div className={styles.container}>
-            <h2>Everything You Need to Plan Your Maui Adventure</h2>
-            <div className={styles.featuresGrid}>
-              {FEATURES.map((f) => (
-                <div key={f.title} className={styles.featureCard}>
-                  <div className={styles.featureIcon}>{f.icon}</div>
-                  <h3>{f.title}</h3>
-                  <p>{f.desc}</p>
-                </div>
-              ))}
+      {/* Features */}
+      <section className="features">
+        <div className="container">
+          <h2>Everything You Need to Plan Your Maui Adventure</h2>
+          <div className="features-grid">
+            <div className="feature-card">
+              <div className="feature-icon">🔍</div>
+              <h3>Price Comparison</h3>
+              <p>See prices from every vendor side-by-side. Find the best deal without the markup.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">⚡</div>
+              <h3>Real-Time Availability</h3>
+              <p>See which activities have openings today or tomorrow. &ldquo;Book Now&rdquo; badges for immediate plans.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">⭐</div>
+              <h3>Unbiased Reviews</h3>
+              <p>Honest ratings from real travelers. No commission means no bias in our recommendations.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🔔</div>
+              <h3>Price Alerts</h3>
+              <p>Get notified when activities on your wishlist drop in price. Never miss a deal.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">💎</div>
+              <h3>Hidden Gems</h3>
+              <p>Discover amazing local spots that don&apos;t show up on commission sites. Support small businesses.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🌤️</div>
+              <h3>Weather-Based Tips</h3>
+              <p>Smart recommendations based on current forecasts. &ldquo;Perfect beach day&rdquo; or &ldquo;rainy day activities.&rdquo;</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🤖</div>
+              <h3>AI Itinerary Planner</h3>
+              <p>Personalized trip planning with insider tips and optimized schedules. Your perfect Maui day.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">📱</div>
+              <h3>Mobile Friendly</h3>
+              <p>Access from anywhere on any device. Plan on the go while exploring the island.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🎯</div>
+              <h3>Honest Info</h3>
+              <p>No hidden agendas. No upselling. Just straightforward information to help you decide.</p>
+            </div>
+            <div className="feature-card">
+              <div className="feature-icon">🔄</div>
+              <h3>Always Updated</h3>
+              <p>Prices and availability refreshed regularly. Current information when you need it.</p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== HOW IT WORKS ===== */}
-        <section className={styles.howItWorks}>
-          <div className={styles.container}>
-            <h2>How It Works</h2>
-            <div className={styles.steps}>
-              {STEPS.map((step) => (
-                <div key={step.num} className={styles.step}>
-                  <div className={styles.stepNumber}>{step.num}</div>
-                  <h3>{step.title}</h3>
-                  <p>{step.desc}</p>
-                </div>
-              ))}
+      {/* How It Works */}
+      <section className="how-it-works">
+        <div className="container">
+          <h2>How It Works</h2>
+          <div className="steps">
+            <div className="step">
+              <div className="step-number">1</div>
+              <h3>Subscribe</h3>
+              <p>Pay $10 once for 180 days of full access. No recurring charges, no surprises.</p>
+            </div>
+            <div className="step">
+              <div className="step-number">2</div>
+              <h3>Compare</h3>
+              <p>Browse all Maui activities with real prices, honest reviews, and AI-powered recommendations.</p>
+            </div>
+            <div className="step">
+              <div className="step-number">3</div>
+              <h3>Click Through</h3>
+              <p>Found something perfect? Click the direct link to the vendor&apos;s website.</p>
+            </div>
+            <div className="step">
+              <div className="step-number">4</div>
+              <h3>Book Direct</h3>
+              <p>Complete your booking on the vendor&apos;s site at the real price—no middleman, no markup.</p>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== PRICING ===== */}
-        <section className={styles.pricing} id="pricing">
-          <div className={styles.container}>
-            <h2>Simple, Honest Pricing</h2>
-            <div className={styles.pricingCard}>
-              <h3>Full Access</h3>
-              <div className={styles.priceAmount}>$10</div>
-              <div className={styles.pricePeriod}>for 180 days</div>
-              <ul className={styles.pricingFeatures}>
-                {PRICING_FEATURES.map((feat) => (
-                  <li key={feat}>{feat}</li>
-                ))}
-              </ul>
-              <Link href="/auth/signup" className={styles.ctaButton}>
-                Get Started Now
-              </Link>
-            </div>
+      {/* Pricing */}
+      <section className="pricing" id="pricing">
+        <div className="container">
+          <h2>Simple, Honest Pricing</h2>
+          <div className="pricing-card">
+            <h3>Full Access</h3>
+            <div className="price-amount">$10</div>
+            <div className="price-period">for 180 days</div>
+            <ul className="pricing-features">
+              <li>Compare all Maui activities</li>
+              <li>Real-time availability updates</li>
+              <li>Unbiased reviews and ratings</li>
+              <li>Price alerts for wishlist items</li>
+              <li>Hidden gems recommendations</li>
+              <li>Weather-based suggestions</li>
+              <li>AI itinerary planner</li>
+              <li>Direct vendor booking links</li>
+              <li>Mobile access anywhere</li>
+              <li>No recurring charges</li>
+            </ul>
+            <a href="#" className="cta-button" style={{ display: 'block', textAlign: 'center', marginTop: '2rem' }}>Get Started Now</a>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== FAQ ===== */}
-        <section className={styles.faq}>
-          <div className={styles.container}>
-            <h2>Frequently Asked Questions</h2>
-            {FAQ_ITEMS.map((item) => (
-              <div key={item.q} className={styles.faqItem}>
-                <h3>{item.q}</h3>
-                <p>{item.a}</p>
-              </div>
-            ))}
-          </div>
-        </section>
+      {/* FAQ */}
+      <section className="faq">
+        <div className="container">
+          <h2>Frequently Asked Questions</h2>
 
-        {/* ===== FINAL CTA ===== */}
-        <section className={styles.finalCta}>
-          <div className={styles.container}>
-            <h2>Ready to Plan Your Perfect Maui Trip?</h2>
-            <p>
-              Join travelers who are done overpaying and ready for honest
-              recommendations.
-            </p>
-            <Link href="/auth/signup" className={styles.ctaButtonLarge}>
-              Get 180 Days for $10
-            </Link>
+          <div className="faq-item">
+            <h3>Why only $10 for 6 months?</h3>
+            <p>We don&apos;t take commissions on bookings like other sites (which can be 10-40% per transaction). Our revenue comes from vendors paying a flat $99/month subscription to be listed—way cheaper than commission fees. This lets us charge you almost nothing while giving vendors a better deal too.</p>
           </div>
-        </section>
-      </div>
+
+          <div className="faq-item">
+            <h3>How is this different from other activity sites?</h3>
+            <p>Traditional booking sites earn 10-40% commission per booking, so they&apos;re incentivized to push expensive activities and hide cheaper alternatives. We show you everything with real prices pulled from vendor sites, with zero bias because we don&apos;t earn more when you spend more.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>Do you actually book the activities for me?</h3>
+            <p>No—we&apos;re an information directory, not a booking platform. We show you all your options with real prices and direct links to vendor websites. You click through and book directly with them. This saves them commission fees and ensures you get authentic service.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>Are the prices really the same as booking direct?</h3>
+            <p>Yes! We pull prices directly from vendor websites in real-time. You&apos;ll pay the exact same price when you book through their site. No markup, no hidden fees.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>What&apos;s included in the AI itinerary planner?</h3>
+            <p>Our AI analyzes your interests, travel dates, weather forecasts, and activity availability to create personalized day-by-day plans. You get insider tips, optimized schedules, and recommendations tailored to your preferences—not our commissions.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>Do you cover all Maui activities?</h3>
+            <p>We&apos;re continuously adding vendors who subscribe to our platform. Unlike commission sites that only show partners paying 10-40% fees, we include anyone paying our flat $99/month, which means better coverage of local and independent operators.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>Is this a recurring subscription?</h3>
+            <p>Nope! Pay $10 once and get 180 days of access. No auto-renewal, no recurring charges. If you want to continue after 6 months, you can resubscribe.</p>
+          </div>
+
+          <div className="faq-item">
+            <h3>What if I&apos;m not satisfied?</h3>
+            <p>We offer a 30-day money-back guarantee. If Maui Activity Hub isn&apos;t helping you plan better, just let us know and we&apos;ll refund you—no questions asked.</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="final-cta">
+        <div className="container">
+          <h2>Ready to Plan Your Perfect Maui Trip?</h2>
+          <p>Join travelers who are done overpaying and ready for honest recommendations.</p>
+          <a href="#pricing" className="cta-button-large">Get 180 Days for $10</a>
+        </div>
+      </section>
     </>
   );
 }
